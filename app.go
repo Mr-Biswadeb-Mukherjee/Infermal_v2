@@ -12,19 +12,14 @@ import (
 
 	config "github.com/official-biswadeb941/Infermal_v2/Modules/Config"
 	domain_generator "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator"
-	DNS "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
+	dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
 	wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/Worker"
 	progressBar "github.com/official-biswadeb941/Infermal_v2/Modules/Progressbar"
+
+	cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/Cooldown"
 )
 
-// GLOBAL cooldown state (atomic)
-var cooldownActive int32 = 0
-var cooldownUntil int64 = 0
-
-// used to block worker goroutines during cooldown
-var cooldownGate = make(chan struct{})
-
-// Startup animation (unchanged)
+// Startup animation
 func startAnimation(stopChan chan struct{}) {
 	frames := []string{"|", "/", "-", "\\"}
 	i := 0
@@ -42,41 +37,17 @@ func startAnimation(stopChan chan struct{}) {
 	}
 }
 
-// small helper to trigger cooldown (recreates gate so workers block)
-func triggerCooldown(durSeconds int64) {
-	atomic.StoreInt32(&cooldownActive, 1)
-	atomic.StoreInt64(&cooldownUntil, time.Now().Unix()+durSeconds)
-	// recreate gate so workers block until it's closed by watcher
-	cooldownGate = make(chan struct{})
-}
-
-// returns true if cooldown is active
-func isCooldownActive() bool {
-	return atomic.LoadInt32(&cooldownActive) == 1
-}
-
-// returns remaining seconds (>=0)
-func cooldownRemaining() int64 {
-	if !isCooldownActive() {
-		return 0
-	}
-	rem := atomic.LoadInt64(&cooldownUntil) - time.Now().Unix()
-	if rem < 0 {
-		return 0
-	}
-	return rem
-}
-
 func main() {
-	// ----------------------------
+
+	// ----------------------------------------------------
 	// Start-up animation
-	// ----------------------------
+	// ----------------------------------------------------
 	animStop := make(chan struct{})
 	go startAnimation(animStop)
 
-	// ----------------------------
+	// ----------------------------------------------------
 	// Load config
-	// ----------------------------
+	// ----------------------------------------------------
 	cfg, err := config.LoadOrCreateConfig("Setting/setting.conf")
 	if err != nil {
 		close(animStop)
@@ -84,9 +55,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// ----------------------------
+	// ----------------------------------------------------
+	// Build DNS engine
+	// ----------------------------------------------------
+	dns := dnsengine.New(dnsengine.Config{
+		Upstream:  cfg.UpstreamDNS,
+		Backup:    cfg.BackupDNS,
+		Retries:   cfg.DNSRetries,
+		TimeoutMS: cfg.DNSTimeoutMS,
+	})
+
+	// ----------------------------------------------------
 	// Load keywords
-	// ----------------------------
+	// ----------------------------------------------------
 	keywords, err := domain_generator.LoadKeywordsCSV("Input/Keywords.csv")
 	if err != nil {
 		close(animStop)
@@ -94,9 +75,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// ----------------------------
+	// ----------------------------------------------------
 	// Generate domains
-	// ----------------------------
+	// ----------------------------------------------------
 	var allGenerated []string
 	for _, base := range keywords {
 		groups := domain_generator.RunAll(base)
@@ -112,9 +93,9 @@ func main() {
 		return
 	}
 
-	// ----------------------------
+	// ----------------------------------------------------
 	// Open output CSV
-	// ----------------------------
+	// ----------------------------------------------------
 	f, err := os.OpenFile("Input/Malicious_Domains.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		close(animStop)
@@ -126,9 +107,9 @@ func main() {
 	writer := csv.NewWriter(f)
 	var writerMu sync.Mutex
 
-	// ----------------------------
-	// Worker pool
-	// ----------------------------
+	// ----------------------------------------------------
+	// Worker pool initialization
+	// ----------------------------------------------------
 	opts := &wpkg.RunOptions{
 		Timeout:         time.Duration(cfg.TimeoutSeconds) * time.Second,
 		MaxRetries:      cfg.MaxRetries,
@@ -139,67 +120,53 @@ func main() {
 	startWorkers := runtime.NumCPU() * 4
 	wp := wpkg.NewWorkerPool(opts, startWorkers)
 
-	// stop startup animation (we're ready)
+	// Stop animation
 	close(animStop)
 	time.Sleep(150 * time.Millisecond)
 
-	// ----------------------------
+	// ----------------------------------------------------
 	// Runtime bookkeeping
-	// ----------------------------
+	// ----------------------------------------------------
 	var completed int64 = 0
+	var resolved int64 = 0 // NEW COUNTER
 	start := time.Now()
 	done := make(chan struct{})
 
-	// Rate limiter (requests per second)
+	// rate limiter
 	rateLimiter := time.Tick(time.Second / time.Duration(cfg.RateLimit))
 
-	// Progress bar (uses upgraded module)
+	// ----------------------------------------------------
+	// Cooldown Manager
+	// ----------------------------------------------------
+	cdm := cooldown.NewManager()
+	cdm.StartWatcher()
+
+	// ----------------------------------------------------
+	// Progress bar
+	// ----------------------------------------------------
 	pb := progressBar.NewProgressBar(int(total), "Resolving domains", "green")
-	// Start auto-render using a small callback so main doesn't manage rendering
 	pb.StartAutoRender(func() (int64, int64, bool, int64) {
 		cur := atomic.LoadInt64(&completed)
-		cd := isCooldownActive()
-		rem := cooldownRemaining()
-		return cur, total, cd, rem
+		return cur, total, cdm.Active(), cdm.Remaining()
 	})
 
-	// ----------------------------
-	// Cooldown watcher: closes gate when cooldown expires
-	// ----------------------------
-	go func() {
-		ticker := time.NewTicker(200 * time.Millisecond)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			if isCooldownActive() {
-				if time.Now().Unix() >= atomic.LoadInt64(&cooldownUntil) {
-					// reset cooldown and open gate to let blocked workers proceed
-					atomic.StoreInt32(&cooldownActive, 0)
-					// safe to close because we recreate gate when setting cooldown
-					close(cooldownGate)
-				}
-			}
-		}
-	}()
-
-	// ----------------------------
+	// ----------------------------------------------------
 	// Dispatch DNS tasks
-	// ----------------------------
+	// ----------------------------------------------------
 	var wg sync.WaitGroup
 
 	for _, domain := range allGenerated {
-		d := domain // capture
+		d := domain
 
 		taskFunc := func(ctx context.Context) (interface{}, []string, []string, []error) {
-			// If global cooldown active, block until watcher closes the gate
-			if isCooldownActive() {
-				<-cooldownGate
+
+			if cdm.Active() {
+				<-cdm.Gate()
 			}
 
-			// rate limit
 			<-rateLimiter
 
-			ok := DNS.Resolve(ctx, d)
+			ok, _ := dns.Resolve(ctx, d)
 			if ok {
 				return d, nil, nil, nil
 			}
@@ -208,7 +175,6 @@ func main() {
 
 		_, resCh, err := wp.SubmitTask(taskFunc, wpkg.Medium, 0)
 		if err != nil {
-			// failed to submit task: count it as completed and continue
 			atomic.AddInt64(&completed, 1)
 			pb.Add(1)
 			continue
@@ -225,42 +191,47 @@ func main() {
 				return
 			}
 
+			// If domain resolved successfully
 			if s, ok := res.Result.(string); ok && s != "" {
+
 				writerMu.Lock()
 				_ = writer.Write([]string{s})
-				// flush occasionally to avoid large in-memory buffers
-				newCount := atomic.LoadInt64(&completed)
-				if newCount%100 == 0 {
+				if atomic.LoadInt64(&completed)%100 == 0 {
 					writer.Flush()
 				}
 				writerMu.Unlock()
+
+				// NEW: Count resolved domains
+				atomic.AddInt64(&resolved, 1)
+
+				// NEW: Live terminal display
+				fmt.Printf("\rResolved Domains: %d / %d", atomic.LoadInt64(&resolved), total)
 			}
 
-			// increment counters and update pb
 			newCount := atomic.AddInt64(&completed, 1)
 			pb.Add(1)
 
-			// Trigger cooldown based on config
 			if cfg.CooldownAfter > 0 && newCount%int64(cfg.CooldownAfter) == 0 {
-				triggerCooldown(int64(cfg.CooldownDuration))
+				cdm.Trigger(int64(cfg.CooldownDuration))
 			}
 
 		}(resCh)
 	}
 
-	// wait for workers
+	// Wait for workers
 	wg.Wait()
 
-	// shutdown
+	// Shutdown
 	close(done)
 	wp.Stop()
 
-	// finalize writer and progress bar
 	writer.Flush()
 	pb.StopAutoRender()
 	pb.Finish()
 
 	elapsed := time.Since(start).Truncate(time.Millisecond)
+
 	fmt.Printf("\n✔ Resolution complete. Time: %s | Total checked: %d\n", elapsed, total)
+	fmt.Printf("✔ Total Resolved Domains: %d\n", resolved)
 	fmt.Println("✔ Valid domains appended to Input/Malicious_Domains.csv")
 }

@@ -12,9 +12,15 @@ type Config struct {
 	RateLimit        int
 	CooldownAfter    int
 	CooldownDuration int
-	TimeoutSeconds   int
-	MaxRetries       int
+	TimeoutSeconds   int   // worker timeout
+	MaxRetries       int   // worker retries
 	AutoScale        bool
+
+	// NEW DNS FIELDS
+	UpstreamDNS   string // DNS server e.g. '1.1.1.1:53'
+	BackupDNS     string
+	DNSRetries    int    // retry count for stub resolver
+	DNSTimeoutMS  int64  // DNS call timeout in ms
 }
 
 var defaultConfig = Config{
@@ -24,6 +30,11 @@ var defaultConfig = Config{
 	TimeoutSeconds:   4,
 	MaxRetries:       0,
 	AutoScale:        true,
+
+	// NEW DEFAULT DNS VALUES
+	UpstreamDNS:  "8.8.8.8:53",
+	DNSRetries:   3,
+	DNSTimeoutMS: 800,
 }
 
 func LoadOrCreateConfig(path string) (Config, error) {
@@ -48,13 +59,24 @@ func writeDefault(path string) error {
 	defer f.Close()
 
 	_, err = f.WriteString(fmt.Sprintf(
-		"rate_limit=%d\ncooldown_after=%d\ncooldown_duration=%d\ntimeout_seconds=%d\nmax_retries=%d\nautoscale=%t\n",
+		"rate_limit=%d\n"+
+			"cooldown_after=%d\n"+
+			"cooldown_duration=%d\n"+
+			"timeout_seconds=%d\n"+
+			"max_retries=%d\n"+
+			"autoscale=%t\n"+
+			"upstream_dns=%s\n"+
+			"dns_retries=%d\n"+
+			"dns_timeout_ms=%d\n",
 		defaultConfig.RateLimit,
 		defaultConfig.CooldownAfter,
 		defaultConfig.CooldownDuration,
 		defaultConfig.TimeoutSeconds,
 		defaultConfig.MaxRetries,
 		defaultConfig.AutoScale,
+		defaultConfig.UpstreamDNS,
+		defaultConfig.DNSRetries,
+		defaultConfig.DNSTimeoutMS,
 	))
 
 	return err
@@ -96,6 +118,15 @@ func parseConfig(path string) (Config, error) {
 			cfg.MaxRetries, _ = strconv.Atoi(value)
 		case "autoscale":
 			cfg.AutoScale = (value == "true")
+
+		// NEW DNS KEYS
+		case "upstream_dns":
+			cfg.UpstreamDNS = value
+		case "dns_retries":
+			cfg.DNSRetries, _ = strconv.Atoi(value)
+		case "dns_timeout_ms":
+			ms, _ := strconv.Atoi(value)
+			cfg.DNSTimeoutMS = int64(ms)
 		}
 	}
 
