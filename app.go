@@ -1,237 +1,190 @@
+// Updated app.go using future-proof SafeNewCSVWriter
 package main
 
 import (
-	"context"
-	"encoding/csv"
-	"fmt"
-	"os"
-	"runtime"
-	"sync"
-	"sync/atomic"
-	"time"
+    "context"
+    "fmt"
+    "os"
+    "runtime"
+    "sync"
+    "sync/atomic"
+    "time"
 
-	config "github.com/official-biswadeb941/Infermal_v2/Modules/Config"
-	domain_generator "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator"
-	dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
-	wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/Worker"
-	progressBar "github.com/official-biswadeb941/Infermal_v2/Modules/Progressbar"
-
-	cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/Cooldown"
+    config "github.com/official-biswadeb941/Infermal_v2/Modules/Config"
+    domain_generator "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator"
+    dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
+    progressBar "github.com/official-biswadeb941/Infermal_v2/Modules/Progressbar"
+    wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/Worker"
+    cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/Cooldown"
+    filewriter "github.com/official-biswadeb941/Infermal_v2/Modules/Filewriter"
 )
 
-// Startup animation
 func startAnimation(stopChan chan struct{}) {
-	frames := []string{"|", "/", "-", "\\"}
-	i := 0
-
-	for {
-		select {
-		case <-stopChan:
-			fmt.Print("\rStarting Infermal_v2 Engine ✓           \n")
-			return
-		default:
-			fmt.Printf("\rStarting Infermal_v2 Engine %s", frames[i%len(frames)])
-			i++
-			time.Sleep(120 * time.Millisecond)
-		}
-	}
+    frames := []string{"|", "/", "-", "\\"}
+    i := 0
+    for {
+        select {
+        case <-stopChan:
+            fmt.Print("\rStarting Infermal_v2 Engine ✓           \n")
+            return
+        default:
+            fmt.Printf("\rStarting Infermal_v2 Engine %s", frames[i%len(frames)])
+            i++
+            time.Sleep(120 * time.Millisecond)
+        }
+    }
 }
 
 func main() {
+    animStop := make(chan struct{})
+    go startAnimation(animStop)
 
-	// ----------------------------------------------------
-	// Start-up animation
-	// ----------------------------------------------------
-	animStop := make(chan struct{})
-	go startAnimation(animStop)
+    // Load config
+    cfg, err := config.LoadOrCreateConfig("Setting/setting.conf")
+    if err != nil {
+        close(animStop)
+        fmt.Println("\nError loading config:", err)
+        os.Exit(1)
+    }
 
-	// ----------------------------------------------------
-	// Load config
-	// ----------------------------------------------------
-	cfg, err := config.LoadOrCreateConfig("Setting/setting.conf")
-	if err != nil {
-		close(animStop)
-		fmt.Println("\nError loading config:", err)
-		os.Exit(1)
-	}
+    // DNS engine
+    dns := dnsengine.New(dnsengine.Config{
+        Upstream:  cfg.UpstreamDNS,
+        Backup:    cfg.BackupDNS,
+        Retries:   cfg.DNSRetries,
+        TimeoutMS: cfg.DNSTimeoutMS,
+    })
 
-	// ----------------------------------------------------
-	// Build DNS engine
-	// ----------------------------------------------------
-	dns := dnsengine.New(dnsengine.Config{
-		Upstream:  cfg.UpstreamDNS,
-		Backup:    cfg.BackupDNS,
-		Retries:   cfg.DNSRetries,
-		TimeoutMS: cfg.DNSTimeoutMS,
-	})
+    // Load keywords
+    keywords, err := domain_generator.LoadKeywordsCSV("Input/Keywords.csv")
+    if err != nil {
+        close(animStop)
+        fmt.Fprintf(os.Stderr, "\nError loading Keywords.csv: %v\n", err)
+        os.Exit(1)
+    }
 
-	// ----------------------------------------------------
-	// Load keywords
-	// ----------------------------------------------------
-	keywords, err := domain_generator.LoadKeywordsCSV("Input/Keywords.csv")
-	if err != nil {
-		close(animStop)
-		fmt.Fprintf(os.Stderr, "\nError loading Keywords.csv: %v\n", err)
-		os.Exit(1)
-	}
+    // Generate domains
+    var allGenerated []string
+    for _, base := range keywords {
+        groups := domain_generator.RunAll(base)
+        for _, g := range groups {
+            allGenerated = append(allGenerated, g...)
+        }
+    }
 
-	// ----------------------------------------------------
-	// Generate domains
-	// ----------------------------------------------------
-	var allGenerated []string
-	for _, base := range keywords {
-		groups := domain_generator.RunAll(base)
-		for _, g := range groups {
-			allGenerated = append(allGenerated, g...)
-		}
-	}
+    total := int64(len(allGenerated))
+    if total == 0 {
+        close(animStop)
+        fmt.Println("No domains generated. Exiting.")
+        return
+    }
 
-	total := int64(len(allGenerated))
-	if total == 0 {
-		close(animStop)
-		fmt.Println("No domains generated. Exiting.")
-		return
-	}
+    // Create async CSV writer (future-proof API)
+    fw, err := filewriter.SafeNewCSVWriter("Input/Malicious_Domains.csv", filewriter.Overwrite)
+    if err != nil {
+        close(animStop)
+        fmt.Println("Error opening CSV writer:", err)
+        os.Exit(1)
+    }
 
-	// ----------------------------------------------------
-	// Open output CSV
-	// ----------------------------------------------------
-	f, err := os.OpenFile("Input/Malicious_Domains.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		close(animStop)
-		fmt.Fprintf(os.Stderr, "Error opening output file: %v\n", err)
-		os.Exit(1)
-	}
-	defer f.Close()
+    // Worker pool setup
+    opts := &wpkg.RunOptions{
+        Timeout:         time.Duration(cfg.TimeoutSeconds) * time.Second,
+        MaxRetries:      cfg.MaxRetries,
+        AutoScale:       cfg.AutoScale,
+        MinWorkers:      1,
+        NonBlockingLogs: true,
+    }
 
-	writer := csv.NewWriter(f)
-	var writerMu sync.Mutex
+    wp := wpkg.NewWorkerPool(opts, runtime.NumCPU()*4)
 
-	// ----------------------------------------------------
-	// Worker pool initialization
-	// ----------------------------------------------------
-	opts := &wpkg.RunOptions{
-		Timeout:         time.Duration(cfg.TimeoutSeconds) * time.Second,
-		MaxRetries:      cfg.MaxRetries,
-		AutoScale:       cfg.AutoScale,
-		MinWorkers:      1,
-		NonBlockingLogs: true,
-	}
-	startWorkers := runtime.NumCPU() * 4
-	wp := wpkg.NewWorkerPool(opts, startWorkers)
+    close(animStop)
+    time.Sleep(150 * time.Millisecond) // Let animation settle
 
-	// Stop animation
-	close(animStop)
-	time.Sleep(150 * time.Millisecond)
+    var completed int64 = 0
+    var resolved int64 = 0
+    start := time.Now()
 
-	// ----------------------------------------------------
-	// Runtime bookkeeping
-	// ----------------------------------------------------
-	var completed int64 = 0
-	var resolved int64 = 0 // NEW COUNTER
-	start := time.Now()
-	done := make(chan struct{})
+    rateLimiter := time.Tick(time.Second / time.Duration(cfg.RateLimit))
 
-	// rate limiter
-	rateLimiter := time.Tick(time.Second / time.Duration(cfg.RateLimit))
+    // Cooldown manager
+    cdm := cooldown.NewManager()
+    cdm.StartWatcher()
 
-	// ----------------------------------------------------
-	// Cooldown Manager
-	// ----------------------------------------------------
-	cdm := cooldown.NewManager()
-	cdm.StartWatcher()
+    // Progress bar setup
+    pb := progressBar.NewProgressBar(int(total), "Resolving domains", "green")
+    pb.StartAutoRender(func() (int64, int64, bool, int64) {
+        cur := atomic.LoadInt64(&completed)
+        return cur, total, cdm.Active(), cdm.Remaining()
+    })
 
-	// ----------------------------------------------------
-	// Progress bar
-	// ----------------------------------------------------
-	pb := progressBar.NewProgressBar(int(total), "Resolving domains", "green")
-	pb.StartAutoRender(func() (int64, int64, bool, int64) {
-		cur := atomic.LoadInt64(&completed)
-		return cur, total, cdm.Active(), cdm.Remaining()
-	})
+    var wg sync.WaitGroup
 
-	// ----------------------------------------------------
-	// Dispatch DNS tasks
-	// ----------------------------------------------------
-	var wg sync.WaitGroup
+    // Submit jobs
+    for _, domain := range allGenerated {
+        d := domain
 
-	for _, domain := range allGenerated {
-		d := domain
+        taskFunc := func(ctx context.Context) (interface{}, []string, []string, []error) {
+            if cdm.Active() {
+                <-cdm.Gate()
+            }
+            <-rateLimiter
 
-		taskFunc := func(ctx context.Context) (interface{}, []string, []string, []error) {
+            ok, _ := dns.Resolve(ctx, d)
+            if ok {
+                return d, nil, nil, nil
+            }
+            return nil, nil, nil, nil
+        }
 
-			if cdm.Active() {
-				<-cdm.Gate()
-			}
+        _, resCh, err := wp.SubmitTask(taskFunc, wpkg.Medium, 0)
+        if err != nil {
+            atomic.AddInt64(&completed, 1)
+            pb.Add(1)
+            continue
+        }
 
-			<-rateLimiter
+        wg.Add(1)
+        go func(rc <-chan wpkg.WorkerResult) {
+            defer wg.Done()
 
-			ok, _ := dns.Resolve(ctx, d)
-			if ok {
-				return d, nil, nil, nil
-			}
-			return nil, nil, nil, nil
-		}
+            res, ok := <-rc
+            if !ok {
+                atomic.AddInt64(&completed, 1)
+                pb.Add(1)
+                return
+            }
 
-		_, resCh, err := wp.SubmitTask(taskFunc, wpkg.Medium, 0)
-		if err != nil {
-			atomic.AddInt64(&completed, 1)
-			pb.Add(1)
-			continue
-		}
+            if s, ok := res.Result.(string); ok && s != "" {
+                fw.WriteRow([]string{s})     // async batched CSV write
+                atomic.AddInt64(&resolved, 1)
+            }
 
-		wg.Add(1)
-		go func(rc <-chan wpkg.WorkerResult) {
-			defer wg.Done()
+            newCount := atomic.AddInt64(&completed, 1)
+            pb.Add(1)
 
-			res, ok := <-rc
-			if !ok {
-				atomic.AddInt64(&completed, 1)
-				pb.Add(1)
-				return
-			}
+            if cfg.CooldownAfter > 0 && newCount%int64(cfg.CooldownAfter) == 0 {
+                cdm.Trigger(int64(cfg.CooldownDuration))
+            }
 
-			// If domain resolved successfully
-			if s, ok := res.Result.(string); ok && s != "" {
+        }(resCh)
+    }
 
-				writerMu.Lock()
-				_ = writer.Write([]string{s})
-				if atomic.LoadInt64(&completed)%100 == 0 {
-					writer.Flush()
-				}
-				writerMu.Unlock()
+    // Wait for all workers
+    wg.Wait()
+    wp.Stop()
 
-				// NEW: Count resolved domains
-				atomic.AddInt64(&resolved, 1)
+    // Finalize CSV writer (flush + close + atomic rename)
+    fw.Close()
 
-				// NEW: Live terminal display
-				fmt.Printf("\rResolved Domains: %d / %d", atomic.LoadInt64(&resolved), total)
-			}
+    // Stop progress bar
+    pb.StopAutoRender()
+    pb.Finish()
 
-			newCount := atomic.AddInt64(&completed, 1)
-			pb.Add(1)
+    // Summary
+    elapsed := time.Since(start).Truncate(time.Millisecond)
 
-			if cfg.CooldownAfter > 0 && newCount%int64(cfg.CooldownAfter) == 0 {
-				cdm.Trigger(int64(cfg.CooldownDuration))
-			}
-
-		}(resCh)
-	}
-
-	// Wait for workers
-	wg.Wait()
-
-	// Shutdown
-	close(done)
-	wp.Stop()
-
-	writer.Flush()
-	pb.StopAutoRender()
-	pb.Finish()
-
-	elapsed := time.Since(start).Truncate(time.Millisecond)
-
-	fmt.Printf("\n✔ Resolution complete. Time: %s | Total checked: %d\n", elapsed, total)
-	fmt.Printf("✔ Total Resolved Domains: %d\n", resolved)
-	fmt.Println("✔ Valid domains appended to Input/Malicious_Domains.csv")
+    fmt.Printf("\n✔ Resolution complete. Time: %s | Total checked: %d\n", elapsed, total)
+    fmt.Printf("✔ Total Resolved Domains: %d\n", resolved)
+    fmt.Println("✔ Valid domains written to Input/Malicious_Domains.csv")
 }
