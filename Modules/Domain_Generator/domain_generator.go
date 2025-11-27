@@ -9,130 +9,135 @@ import (
 	ts "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Typo_squat"
 	hg "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Homograph"
 	bs "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Bitsquatting"
-    cs "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Combosquat"
+	cs "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Combosquat"
 	ss1 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Subdomain_squat"
 	ss2 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Soundsquat"
-
 	jw "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Jarowinkler"
-
 )
 
-var targetTLDs = []string{
-	".in",
-}
+// Default target TLDs
+var targetTLDs = []string{".in"}
 
-// Similarity threshold for Jaro-Winkler
 const similarityThreshold = 0.10
+
+// ---------------------------------------------------
+// Sanitizer
+// ---------------------------------------------------
 
 func sanitizeKeyword(s string) string {
 	s = strings.TrimSpace(s)
 	s = strings.ReplaceAll(s, " ", "")
 
-	remove := []string{".", ",", "/", "\\", ":", ";", "'", "\"", "?", "!", "(", ")", "[", "]", "{", "}", "|"}
+	remove := []string{
+		".", ",", "/", "\\", ":", ";", "'", "\"", "?",
+		"!", "(", ")", "[", "]", "{", "}", "|",
+	}
 	for _, r := range remove {
 		s = strings.ReplaceAll(s, r, "")
 	}
-
 	return s
 }
 
-func LoadKeywordsCSV(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open CSV file: %w", err)
-	}
-	defer file.Close()
+// ---------------------------------------------------
+// Internal CSV loader
+// ---------------------------------------------------
 
-	reader := csv.NewReader(file)
-	rows, err := reader.ReadAll()
+func loadKeywords(path string) ([]string, error) {
+	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+		return nil, fmt.Errorf("failed to open CSV: %w", err)
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	rows, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CSV: %w", err)
 	}
 
-	var domains []string
+	var list []string
 	for i, row := range rows {
 		if len(row) == 0 {
 			continue
 		}
+
+		// Skip header if present
 		if i == 0 && (row[0] == "domain" || row[0] == "Domain") {
 			continue
 		}
 
 		cleaned := sanitizeKeyword(row[0])
 		if cleaned != "" {
-			domains = append(domains, cleaned)
+			list = append(list, cleaned)
 		}
 	}
-
-	return domains, nil
+	return list, nil
 }
+
+// ---------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------
 
 func appendTLDs(labels []string) []string {
 	var out []string
-	for _, label := range labels {
+	for _, lbl := range labels {
 		for _, tld := range targetTLDs {
-			out = append(out, label+tld)
+			out = append(out, lbl+tld)
 		}
 	}
 	return out
 }
 
-// ---------------------------------------------------
-// SIMILARITY FILTER
-// ---------------------------------------------------
-
-func filterSimilar(base string, domains []string) []string {
+func filterSimilar(base string, list []string) []string {
 	var out []string
-
-	for _, d := range domains {
-		score := jw.JaroWinklerDistance(base, d)
-		if score >= similarityThreshold {
+	for _, d := range list {
+		if jw.JaroWinklerDistance(base, d) >= similarityThreshold {
 			out = append(out, d)
 		}
 	}
-
 	return out
 }
 
-func runAllInternal(base string) map[string][]string {
+func generateForBase(base string) []string {
 	rawTypo := ts.TypoSquat(base)
 	rawHomo := hg.Homograph(base)
 	rawBits := bs.Bitsquatting(base)
-    rawcombo := cs.Combosquat(base)
-    rawsubdomain := ss1.Subdomainsquat(base)
-    rawsoundsquat := ss2.Soundsquat(base)
+	rawCombo := cs.Combosquat(base)
+	rawSubs := ss1.Subdomainsquat(base)
+	rawSound := ss2.Soundsquat(base)
 
+	typo := filterSimilar(base, appendTLDs(rawTypo))
+	homo := filterSimilar(base, appendTLDs(rawHomo))
+	bits := filterSimilar(base, appendTLDs(rawBits))
+	combo := filterSimilar(base, appendTLDs(rawCombo))
+	subs := filterSimilar(base, appendTLDs(rawSubs))
+	sound := filterSimilar(base, appendTLDs(rawSound))
 
-	typo := appendTLDs(rawTypo)
-	homo := appendTLDs(rawHomo)
-	bits := appendTLDs(rawBits)
-    combo := appendTLDs(rawcombo)
-    subdomain := appendTLDs(rawsubdomain)
-    soundsquat := appendTLDs(rawsoundsquat)
+	var all []string
+	all = append(all, typo...)
+	all = append(all, homo...)
+	all = append(all, bits...)
+	all = append(all, combo...)
+	all = append(all, subs...)
+	all = append(all, sound...)
 
-	// integrate Jaro-Winkler filtering internally
-	typo = filterSimilar(base, typo)
-	homo = filterSimilar(base, homo)
-	bits = filterSimilar(base, bits)
-    combo = filterSimilar(base, combo)
-    subdomain = filterSimilar(base, subdomain)
-    soundsquat = filterSimilar(base, soundsquat)
-
-
-	return map[string][]string{
-		"typo_squat": typo,
-		"homograph":  homo,
-		"bitsquat":   bits,
-        "combosquat": combo,
-        "subdomainsquat": subdomain,
-        "soundsquat": soundsquat,
-	}
+	return all
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// PUBLIC API (single entry point)
 // ---------------------------------------------------
 
-func DomainGenerator(base string) map[string][]string {
-	return runAllInternal(base)
+func GenerateFromCSV(path string) ([]string, error) {
+	keywords, err := loadKeywords(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var all []string
+	for _, base := range keywords {
+		all = append(all, generateForBase(base)...)
+	}
+
+	return all, nil
 }

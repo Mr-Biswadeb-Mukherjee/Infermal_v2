@@ -18,6 +18,7 @@ import (
 	filewriter "github.com/official-biswadeb941/Infermal_v2/Modules/Filewriter"
 	redis "github.com/official-biswadeb941/Infermal_v2/Modules/Redis"
 	ratelimiter "github.com/official-biswadeb941/Infermal_v2/Modules/Ratelimiter"
+	ui "github.com/official-biswadeb941/Infermal_v2/Modules/UI"
 )
 
 //
@@ -31,36 +32,20 @@ type RedisStore interface {
 	Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error)
 }
 
-func startAnimation(stopChan chan struct{}) {
-	frames := []string{"|", "/", "-", "\\"}
-	i := 0
-	base := "Starting Infermal_v2 Engine"
-
-	for {
-		select {
-		case <-stopChan:
-			fmt.Printf("\r%-40s\n", base+" ✓")
-			return
-		default:
-			frame := frames[i%len(frames)]
-			fmt.Printf("\r%-40s", fmt.Sprintf("%s %s", base, frame))
-			i++
-			time.Sleep(110 * time.Millisecond)
-		}
-	}
-}
-
 func main() {
 
+	// -------------------------
+	// UI: Starting Animation
+	// -------------------------
 	animStop := make(chan struct{})
-	go startAnimation(animStop)
+	go ui.Spinner(animStop, "Starting Infermal_v2 Engine")
 
-	// Start timestamp (system time, 12-hour format, dd-mm-yy)
-	startTime := time.Now().Local()
-	fmt.Printf("\n[%s] Engine Started\n",
-		startTime.Format("02-01-06 03:04:05 PM"))
+	// Start banner (timestamp)
+	startTime := ui.StartBanner()
 
-	// Load config
+	// -------------------------
+	// Load Config
+	// -------------------------
 	cfg, err := config.LoadOrCreateConfig("Setting/setting.conf")
 	if err != nil {
 		close(animStop)
@@ -68,7 +53,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// -------------------------
 	// Init Redis
+	// -------------------------
 	if err := redis.Init(); err != nil {
 		close(animStop)
 		fmt.Println("\nError initializing Redis:", err)
@@ -77,19 +64,19 @@ func main() {
 
 	var rdb RedisStore = redis.Client()
 
-	// Initialize sliding-window ratelimiter (uses the same Redis backend)
-	// If cfg.RateLimit <= 0 treat as effectively unlimited by using a very large number.
+	// -------------------------
+	// Rate Limiter Setup
+	// -------------------------
 	limit := cfg.RateLimit
 	if limit <= 0 {
 		limit = 999999999
 	}
 
-	ratelimiter.Init(
-		rdb,                  // redis store (must implement Eval)
-		time.Second,          // sliding window duration (1 second window)
-		int64(limit),         // max hits per window
-	)
+	ratelimiter.Init(rdb, time.Second, int64(limit))
 
+	// -------------------------
+	// DNS Engine Setup
+	// -------------------------
 	dns := dnsengine.New(dnsengine.Config{
 		Upstream:  cfg.UpstreamDNS,
 		Backup:    cfg.BackupDNS,
@@ -97,19 +84,14 @@ func main() {
 		TimeoutMS: cfg.DNSTimeoutMS,
 	})
 
-	keywords, err := domain_generator.LoadKeywordsCSV("Input/Keywords.csv")
+	// -------------------------
+	// Domain Generation (NEW)
+	// -------------------------
+	allGenerated, err := domain_generator.GenerateFromCSV("Input/Keywords.csv")
 	if err != nil {
 		close(animStop)
-		fmt.Fprintf(os.Stderr, "\nError loading Keywords.csv: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\nError processing Keywords.csv: %v\n", err)
 		os.Exit(1)
-	}
-
-	var allGenerated []string
-	for _, base := range keywords {
-		groups := domain_generator.DomainGenerator(base)
-		for _, g := range groups {
-			allGenerated = append(allGenerated, g...)
-		}
 	}
 
 	total := int64(len(allGenerated))
@@ -119,6 +101,9 @@ func main() {
 		return
 	}
 
+	// -------------------------
+	// CSV Writer
+	// -------------------------
 	fw, err := filewriter.SafeNewCSVWriter("Input/Domains.csv", filewriter.Overwrite)
 	if err != nil {
 		close(animStop)
@@ -126,6 +111,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// -------------------------
+	// Worker Pool Setup
+	// -------------------------
 	opts := &wpkg.RunOptions{
 		Timeout:         time.Duration(cfg.TimeoutSeconds) * time.Second,
 		MaxRetries:      cfg.MaxRetries,
@@ -136,12 +124,15 @@ func main() {
 
 	wp := wpkg.NewWorkerPool(opts, runtime.NumCPU()*4, rdb)
 
+	// Stop animation here (UI polish)
 	close(animStop)
 	time.Sleep(150 * time.Millisecond)
 
-	var completed int64 = 0
-	var resolved int64 = 0
-	start := time.Now()
+	// -------------------------
+	// Resolve Domains
+	// -------------------------
+	var completed int64
+	var resolved int64
 
 	cdm := cooldown.NewManager()
 	cdm.StartWatcher()
@@ -162,11 +153,12 @@ func main() {
 
 		taskFunc := func(ctx context.Context) (interface{}, []string, []string, []error) {
 
-			// Check Redis cache first
+			// Redis cache lookup
 			if rdb != nil {
 				cacheCtx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 				cached, err := rdb.GetValue(cacheCtx, "dns:"+d)
 				cancel()
+
 				if err == nil {
 					if cached == "1" {
 						return d, nil, nil, nil
@@ -177,7 +169,7 @@ func main() {
 				}
 			}
 
-			// Cooldown gate
+			// Cooldown
 			if cdm.Active() {
 				select {
 				case <-ctx.Done():
@@ -186,11 +178,7 @@ func main() {
 				}
 			}
 
-			// ------------------------
-			// NEW Redis Rate Limiter
-			// ------------------------
-			// Use a per-key limiter name; using "dns-rate" for all DNS calls.
-			// We will fail-open on Eval errors (so transient redis problems don't stall everything).
+			// Rate limiter
 			for {
 				select {
 				case <-ctx.Done():
@@ -200,15 +188,12 @@ func main() {
 
 				allowed, err := ratelimiter.RateLimit(ctx, "dns-rate")
 				if err != nil {
-					// Fail-open: if limiter errors (redis unavailable, etc.), break and continue.
-					// This avoids blocking resolution due to transient limiter failures.
 					break
 				}
 				if allowed {
 					break
 				}
-				// Not allowed yet — back off briefly then retry.
-				// Short sleep keeps latency low while not burning CPU.
+
 				time.Sleep(10 * time.Millisecond)
 			}
 
@@ -272,22 +257,16 @@ func main() {
 
 	wg.Wait()
 	wp.Stop()
-
 	_ = fw.Close()
 
 	pb.StopAutoRender()
 	pb.Finish()
 
-	elapsed := time.Since(start).Truncate(time.Millisecond)
+	// -------------------------
+	// UI: End Banner / Summary
+	// -------------------------
+	ui.EndBanner(startTime, total, resolved)
 
-	// End timestamp (system time, 12-hour format, dd-mm-yy)
-	endTime := time.Now().Local()
-	fmt.Printf("\n[%s] Engine Finished\n",
-		endTime.Format("02-01-06 03:04:05 PM"))
-
-	fmt.Printf("✔ Resolution complete. Time: %s | Total checked: %d\n", elapsed, total)
-	fmt.Printf("✔ Total Resolved Domains: %d\n", resolved)
 	fmt.Println("✔ Valid domains written to Input/Domains.csv")
-
 	redis.Close()
 }
