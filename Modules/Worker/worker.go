@@ -1,5 +1,3 @@
-// worker.go: Main Function and Public API
-
 package worker
 
 import (
@@ -42,6 +40,11 @@ func NewWorkerPool(opts *RunOptions, conc int, rdb RedisStore) *WorkerPool {
 		opts.MinWorkers = 1
 	}
 
+	// dedupe TTL default: twice the timeout if not set
+	if opts.DedupeTTL <= 0 {
+		opts.DedupeTTL = opts.Timeout * 2
+	}
+
 	if conc <= 0 {
 		conc = runtime.NumCPU()
 	}
@@ -61,7 +64,7 @@ func NewWorkerPool(opts *RunOptions, conc int, rdb RedisStore) *WorkerPool {
 		options:     opts,
 		ctx:         ctx,
 		cancel:      cancel,
-		inflight:    make(map[string]int64),
+		inflight:    make(map[string]inflightEntry),
 		monitorStop: make(chan struct{}),
 		redis:       rdb, // store injected Redis instance (may be nil)
 	}
@@ -72,7 +75,8 @@ func NewWorkerPool(opts *RunOptions, conc int, rdb RedisStore) *WorkerPool {
 	}
 
 	if opts.AutoScale {
-		go wp.monitor()
+		tick := time.NewTicker(opts.EvalInterval)
+		go wp.monitor(tick.C)
 	}
 
 	return wp
@@ -83,32 +87,34 @@ func (wp *WorkerPool) SubmitTask(f TaskFunc, p TaskPriority, weight int) (int64,
 		return 0, nil, errors.New("nil task")
 	}
 
-	wp.mu.Lock()
-	defer wp.mu.Unlock()
-
-	if len(wp.workers) == 0 {
-		return 0, nil, errors.New("no workers")
-	}
-
+	// compute dedupe key
 	key := computeDedupeKey(wp.options, f)
+
+	// lock and purge expired inflight entries, and check registry
+	now := time.Now()
+	wp.mu.Lock()
 	if key != "" {
-		if id, ok := wp.inflight[key]; ok {
-			// find existing task channel
-			for _, w := range wp.workers {
-				w.mu.Lock()
-				for _, t := range w.taskQueue {
-					if t.ID == id {
-						ch := t.ResultCh
-						w.mu.Unlock()
-						return id, ch, nil
-					}
-				}
-				w.mu.Unlock()
+		for k, entry := range wp.inflight {
+			if now.Sub(entry.created) > wp.options.DedupeTTL {
+				delete(wp.inflight, k)
 			}
-			// fallback: inflight entry exists but task not local (rare)
+		}
+		if e, ok := wp.inflight[key]; ok {
+			// return existing ID and channel (authoritative)
+			ch := e.ch
+			id := e.id
+			wp.mu.Unlock()
+			return id, ch, nil
 		}
 	}
 
+	// if no workers currently, fail fast
+	if len(wp.workers) == 0 {
+		wp.mu.Unlock()
+		return 0, nil, errors.New("no workers")
+	}
+
+	// create new task
 	id := atomic.AddInt64(&wp.nextID, 1)
 	ch := make(chan WorkerResult, 1)
 	task := &Task{
@@ -121,29 +127,36 @@ func (wp *WorkerPool) SubmitTask(f TaskFunc, p TaskPriority, weight int) (int64,
 		Dedupe:   key,
 	}
 
+	// register inflight entry (authoritative local registry)
 	if key != "" {
-		wp.inflight[key] = id
+		wp.inflight[key] = inflightEntry{
+			id:      id,
+			ch:      ch,
+			created: time.Now(),
+		}
 
 		// Best-effort: mark inflight in Redis so other processes can see the dedupe.
 		// We don't block on Redis — it's a helper for distributed dedupe only.
 		if wp.redis != nil {
 			dedupeKey := fmt.Sprintf("inflight:%s", key)
-			go func(dk string) {
+			go func(dk string, val int64) {
 				ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 				// store id as string; set a reasonable TTL so abandoned entries expire.
-				_ = wp.redis.SetValue(ctx, dk, fmt.Sprintf("%d", id), 10*time.Minute)
+				_ = wp.redis.SetValue(ctx, dk, fmt.Sprintf("%d", val), wp.options.DedupeTTL)
 				cancel()
-			}(dedupeKey)
+			}(dedupeKey, id)
 		}
 	}
 
 	// round-robin distribution
 	if len(wp.workers) == 0 {
 		// shouldn't happen, but guard
+		wp.mu.Unlock()
 		return 0, nil, errors.New("no available workers")
 	}
 	wp.rrIndex = (wp.rrIndex + 1) % len(wp.workers)
 	w := wp.workers[wp.rrIndex]
+	wp.mu.Unlock()
 
 	w.mu.Lock()
 	heap.Push(&w.taskQueue, task)
@@ -214,4 +227,17 @@ func (wp *WorkerPool) log(msg string) {
 		return
 	}
 	logMessage(wp.options.LogChannel, msg, wp.options.NonBlockingLogs)
+}
+
+// NewWorkerPoolWithTick is used only for testing autoscaling.
+// It injects a fake ticker channel so tests can trigger scaleEval()
+// instantly without waiting for real time.
+func NewWorkerPoolWithTick(opts *RunOptions, conc int, rdb RedisStore, tickCh <-chan time.Time) *WorkerPool {
+	wp := NewWorkerPool(opts, conc, rdb)
+
+	if opts.AutoScale && tickCh != nil {
+		go wp.monitor(tickCh)
+	}
+
+	return wp
 }

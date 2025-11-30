@@ -52,8 +52,9 @@ func generateDelimiterSquatsInternal(s string) []string {
 
 	return out
 }
+
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 
 func Subdomainsquat(target string) []string {

@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package rresolver
 
 import (
@@ -24,11 +27,11 @@ var rootServers []string // loaded from root.conf at init
 
 // Resolver holds server configuration and cache.
 type Resolver struct {
-	Addr      string // listen address, e.g. \":53\"
-	Timeout   time.Duration
-	client    *mdns.Client
-	cache     *cache
-	listenMux sync.Mutex
+	Addr        string // listen address, e.g. \":53\"
+	Timeout     time.Duration
+	client      *mdns.Client
+	cache       *cache
+	listenMux   sync.Mutex
 	rootServers []string // populated by LoadRootHints
 }
 
@@ -43,10 +46,10 @@ func NewResolver(listenAddr string) *Resolver {
 		cache: newCache(),
 	}
 
-    // auto-load root hints
-    _ = r.LoadRootHints("Setting/root.conf")
+	// auto-load root hints
+	_ = r.LoadRootHints("Setting/root.conf")
 
-    return r
+	return r
 }
 
 // Start starts both UDP and TCP servers and blocks.
@@ -129,7 +132,7 @@ func (r *Resolver) Resolve(ctx context.Context, qname string, qtype uint16) ([]m
 	for {
 		// iterate servers list
 		var resp *mdns.Msg
-				for _, srv := range servers {
+		for _, srv := range servers {
 			resp, _, lastErr = r.tryQuery(ctx, srv, q)
 			if lastErr == nil && resp != nil {
 				break
@@ -267,49 +270,47 @@ func dnsFqdn(name string) string {
 // LoadRootHints parses a BIND-style root hints file (root.hints) and extracts A/AAAA records.
 // It populates r.rootServers with addresses in the form "ip:53".
 func (r *Resolver) LoadRootHints(path string) error {
-    data, err := os.ReadFile(path)
-    if err != nil {
-        return err
-    }
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
 
-    zp := mdns.NewZoneParser(bytes.NewReader(data), "", path)
-    records := make([]string, 0)
-    seen := make(map[string]struct{})
+	zp := mdns.NewZoneParser(bytes.NewReader(data), "", path)
+	records := make([]string, 0)
+	seen := make(map[string]struct{})
 
-    for {
-        rr, ok := zp.Next()
-        if !ok {
-            break
-        }
+	for {
+		rr, ok := zp.Next()
+		if !ok {
+			break
+		}
 
-        switch v := rr.(type) {
-        case *mdns.A:
-            ip := v.A.String()
-            addr := net.JoinHostPort(ip, "53")
-            if _, ok := seen[addr]; !ok {
-                seen[addr] = struct{}{}
-                records = append(records, addr)
-            }
+		switch v := rr.(type) {
+		case *mdns.A:
+			ip := v.A.String()
+			addr := net.JoinHostPort(ip, "53")
+			if _, ok := seen[addr]; !ok {
+				seen[addr] = struct{}{}
+				records = append(records, addr)
+			}
 
-        case *mdns.AAAA:
-            ip := v.AAAA.String()
-            addr := net.JoinHostPort(ip, "53")
-            if _, ok := seen[addr]; !ok {
-                seen[addr] = struct{}{}
-                records = append(records, addr)
-            }
-        }
-    }
+		case *mdns.AAAA:
+			ip := v.AAAA.String()
+			addr := net.JoinHostPort(ip, "53")
+			if _, ok := seen[addr]; !ok {
+				seen[addr] = struct{}{}
+				records = append(records, addr)
+			}
+		}
+	}
 
-    if len(records) == 0 {
-        return fmt.Errorf("no A/AAAA records found in root hints: %s", path)
-    }
+	if len(records) == 0 {
+		return fmt.Errorf("no A/AAAA records found in root hints: %s", path)
+	}
 
-    r.rootServers = records
-    return nil
+	r.rootServers = records
+	return nil
 }
-
-
 
 type cacheEntry struct {
 	rrs       []mdns.RR

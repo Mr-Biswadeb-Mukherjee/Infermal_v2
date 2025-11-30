@@ -67,11 +67,11 @@ func soundexInternal(s string) string {
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 
 func Soundsquat(s string) []string {
-    s = strings.ToLower(strings.TrimSpace(s))
-    code := soundexInternal(s)
-    return []string{code}
+	s = strings.ToLower(strings.TrimSpace(s))
+	code := soundexInternal(s)
+	return []string{code}
 }

@@ -88,7 +88,7 @@ func generateInternal(base string) []string {
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 func TypoSquat(base string) []string {
 	return generateInternal(base)

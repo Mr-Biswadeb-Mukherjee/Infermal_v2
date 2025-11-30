@@ -1,5 +1,3 @@
-// worker_types.go: Defines all worker structs, options, and internal state shared by the pool.
-
 package worker
 
 import (
@@ -55,6 +53,10 @@ type RunOptions struct {
 
 	// Deterministic dedupe key generator
 	TaskKey func(f TaskFunc) string
+
+	// Local dedupe TTL: expired inflight entries are purged.
+	// Default set in NewWorkerPool if zero.
+	DedupeTTL time.Duration
 }
 
 // ------------------------------------------------------------
@@ -148,6 +150,13 @@ type workerInfo struct {
 	closing   bool
 }
 
+// inflightEntry represents a local dedupe registry entry.
+type inflightEntry struct {
+	id      int64
+	ch      chan WorkerResult
+	created time.Time
+}
+
 // WorkerPool represents either a local or Redis-backed pool.
 // The actual scheduling logic is implemented in worker.go or
 // worker_local.go depending on the mode.
@@ -163,7 +172,7 @@ type WorkerPool struct {
 	nextID  int64
 	rrIndex int
 
-	inflight map[string]int64 // dedupe map for local mode
+	inflight map[string]inflightEntry // dedupe registry for local mode
 	redis    RedisStore
 
 	monitorStop   chan struct{}
@@ -171,9 +180,9 @@ type WorkerPool struct {
 }
 
 const (
-	DefaultTimeout       = 10 * time.Second
-	DefaultScaleUp       = 1.2
-	DefaultScaleDown     = 0.3
-	DefaultIdleGrace     = 10 * time.Second
-	DefaultEvalInterval  = 3 * time.Second
+	DefaultTimeout      = 10 * time.Second
+	DefaultScaleUp      = 1.2
+	DefaultScaleDown    = 0.3
+	DefaultIdleGrace    = 10 * time.Second
+	DefaultEvalInterval = 3 * time.Second
 )

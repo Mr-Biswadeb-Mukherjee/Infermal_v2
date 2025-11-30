@@ -10,22 +10,22 @@ import (
 	"time"
 
 	config "github.com/official-biswadeb941/Infermal_v2/Modules/Config"
-	domain_generator "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator"
-	dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
-	progressBar "github.com/official-biswadeb941/Infermal_v2/Modules/Progressbar"
-	wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/Worker"
 	cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/Cooldown"
+	dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/DNS"
+	domain_generator "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator"
 	filewriter "github.com/official-biswadeb941/Infermal_v2/Modules/Filewriter"
-	redis "github.com/official-biswadeb941/Infermal_v2/Modules/Redis"
+	progressBar "github.com/official-biswadeb941/Infermal_v2/Modules/Progressbar"
 	ratelimiter "github.com/official-biswadeb941/Infermal_v2/Modules/Ratelimiter"
+	redis "github.com/official-biswadeb941/Infermal_v2/Modules/Redis"
 	ui "github.com/official-biswadeb941/Infermal_v2/Modules/UI"
+	wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/Worker"
 )
 
-//
-// ------------------------------
-//  Redis Interface (Only Here)
 // ------------------------------
 //
+//	Redis Interface (Only Here)
+//
+// ------------------------------
 type RedisStore interface {
 	GetValue(ctx context.Context, key string) (string, error)
 	SetValue(ctx context.Context, key string, v interface{}, ttl time.Duration) error

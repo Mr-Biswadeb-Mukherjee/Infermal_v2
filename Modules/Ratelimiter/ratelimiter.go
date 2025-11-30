@@ -1,10 +1,12 @@
+//ratelimiter.go
+
 package ratelimiter
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
 )
 
 // ----------------------------------------------
@@ -32,7 +34,9 @@ func newSlidingWindowLimiter(rdb RedisStore, window time.Duration, maxHits int64
 }
 
 // ==============================================
-//               INTERNAL INSTANCE
+//
+//	INTERNAL INSTANCE
+//
 // ==============================================
 var (
 	instance     *SlidingWindowLimiter

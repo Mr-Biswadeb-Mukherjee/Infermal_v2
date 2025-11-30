@@ -1,3 +1,5 @@
+//resource.go
+
 package Resource
 
 import (

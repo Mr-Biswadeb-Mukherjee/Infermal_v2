@@ -1,3 +1,5 @@
+//dns.go
+
 package dns
 
 import (

@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 func taskKey(id int64) string {
 	return fmt.Sprintf("task:%d", id)
 }
@@ -35,7 +34,6 @@ func redisQueueKey() string {
 	return "tasks:queue"
 }
 
-
 func logMessage(ch chan string, msg string, nonblock bool) {
 	if ch == nil {
 		return
@@ -49,7 +47,6 @@ func logMessage(ch chan string, msg string, nonblock bool) {
 	}
 	ch <- msg
 }
-
 
 const (
 	priorityWeight = 1e12
@@ -112,14 +109,12 @@ func computeDedupeKey(opts *RunOptions, f TaskFunc) string {
 	return opts.TaskKey(f)
 }
 
-
 func sendResult(ch chan WorkerResult, r WorkerResult) {
 	select {
 	case ch <- r:
 	default:
 	}
 }
-
 
 func clampLoad(v int) int {
 	if v < 0 {
@@ -132,8 +127,6 @@ func clampLoad(v int) int {
 func logFormat(prefix string, msg string) string {
 	return fmt.Sprintf("%s: %s", prefix, msg)
 }
-
-
 
 func readWithTimeout(ctx context.Context, fn func(context.Context) (string, error)) (string, error) {
 	type out struct {

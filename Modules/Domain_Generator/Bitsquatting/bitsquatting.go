@@ -56,7 +56,7 @@ func generateInternal(base string) []string {
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 
 func Bitsquatting(base string) []string {

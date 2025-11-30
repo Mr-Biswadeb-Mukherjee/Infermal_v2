@@ -118,7 +118,7 @@ func generateEdits(s string) []string {
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 
 func Combosquat(target string) []string {

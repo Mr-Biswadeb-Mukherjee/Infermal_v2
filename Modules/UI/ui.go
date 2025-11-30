@@ -1,3 +1,4 @@
+// ui_test.go
 
 package ui
 
@@ -6,8 +7,6 @@ import (
 	"time"
 )
 
-// Spinner renders a simple animated loader.
-// It stops when the provided channel is closed.
 func Spinner(stop chan struct{}, label string) {
 	frames := []string{"|", "/", "-", "\\"}
 	i := 0
@@ -25,8 +24,6 @@ func Spinner(stop chan struct{}, label string) {
 	}
 }
 
-// StartBanner prints the engine start timestamp
-// and returns the time for later duration calculation.
 func StartBanner() time.Time {
 	now := time.Now().Local()
 	fmt.Printf("\n[%s] Engine Started\n", now.Format("02-01-06 03:04:05 PM"))

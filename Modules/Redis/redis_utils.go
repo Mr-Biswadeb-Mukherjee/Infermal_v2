@@ -1,3 +1,5 @@
+//redis_utils.go
+
 package redis
 
 import (
@@ -7,7 +9,6 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-
 )
 
 //
@@ -17,14 +18,14 @@ import (
 //
 
 type RedisConfig struct {
-	Host         string   `mapstructure:"host"`
-	Port         int      `mapstructure:"port"`
-	Username     string   `mapstructure:"username"`
-	Password     string   `mapstructure:"password"`
-	DB           int      `mapstructure:"db"`
-	MaxRetries   int      `mapstructure:"max_retries"`
-	PoolSize     int      `mapstructure:"pool_size"`
-	MinIdleConns int      `mapstructure:"min_idle_conns"`
+	Host         string `mapstructure:"host"`
+	Port         int    `mapstructure:"port"`
+	Username     string `mapstructure:"username"`
+	Password     string `mapstructure:"password"`
+	DB           int    `mapstructure:"db"`
+	MaxRetries   int    `mapstructure:"max_retries"`
+	PoolSize     int    `mapstructure:"pool_size"`
+	MinIdleConns int    `mapstructure:"min_idle_conns"`
 
 	Cluster bool     `mapstructure:"cluster"`
 	Addrs   []string `mapstructure:"addrs"`
@@ -211,7 +212,15 @@ func (r *RedisClient) key(k string) string {
 //
 
 func (r *RedisClient) Close() error {
+	r.mu.Lock()
+	if r.stopChan == nil {
+		r.mu.Unlock()
+		return nil
+	}
 	close(r.stopChan)
+	r.stopChan = nil
+	r.mu.Unlock()
+
 	r.wg.Wait()
 	return r.client.Close()
 }

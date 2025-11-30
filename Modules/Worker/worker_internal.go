@@ -1,11 +1,9 @@
-// Internal worker pool implementation: execution, autoscaling, and shutdown.
-
 package worker
 
 import (
+	"context"
 	"fmt"
 	"time"
-	"context"
 )
 
 func (wp *WorkerPool) exec(w *workerInfo, t *Task) {
@@ -25,7 +23,10 @@ func (wp *WorkerPool) exec(w *workerInfo, t *Task) {
 		// clear dedupe entry
 		if t.Dedupe != "" {
 			wp.mu.Lock()
-			delete(wp.inflight, t.Dedupe)
+			// only delete if the stored id matches (defensive)
+			if e, ok := wp.inflight[t.Dedupe]; ok && e.id == t.ID {
+				delete(wp.inflight, t.Dedupe)
+			}
 			wp.mu.Unlock()
 
 			// Best-effort Redis cleanup: shrink TTL instead of DEL.
@@ -40,8 +41,6 @@ func (wp *WorkerPool) exec(w *workerInfo, t *Task) {
 			}
 		}
 	}()
-
-
 
 	// callback: start
 	if wp.options.OnTaskStart != nil {
@@ -76,12 +75,10 @@ func (wp *WorkerPool) exec(w *workerInfo, t *Task) {
 	}
 }
 
-func (wp *WorkerPool) monitor() {
-	tick := time.NewTicker(wp.options.EvalInterval)
-	defer tick.Stop()
+func (wp *WorkerPool) monitor(tickCh <-chan time.Time) {
 	for {
 		select {
-		case <-tick.C:
+		case <-tickCh:
 			wp.scaleEval()
 		case <-wp.monitorStop:
 			return
@@ -187,6 +184,10 @@ func stopWorkerPoolInternal(wp *WorkerPool) {
 		}
 		w.mu.Unlock()
 	}
+
+	// clear inflight registry to avoid stale local entries
+	wp.inflight = make(map[string]inflightEntry)
+
 	wp.mu.Unlock()
 
 	// wait until worker goroutines complete

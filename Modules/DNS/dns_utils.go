@@ -1,3 +1,5 @@
+//dns_utils.go
+
 package dns
 
 import (
@@ -5,30 +7,30 @@ import (
 	"time"
 )
 
-//
-// ---------------------------------------------------
-//   OPTIONAL CACHE INTERFACE (No Redis dependency)
 // ---------------------------------------------------
 //
+//	OPTIONAL CACHE INTERFACE (No Redis dependency)
+//
+// ---------------------------------------------------
 type Cache interface {
 	GetValue(ctx context.Context, key string) (string, error)
 	SetValue(ctx context.Context, key string, v interface{}, ttl time.Duration) error
 }
 
-//
-// ---------------------------------------------------
-//                RESOLVER INTERFACE
 // ---------------------------------------------------
 //
+//	RESOLVER INTERFACE
+//
+// ---------------------------------------------------
 type Resolver interface {
 	Resolve(ctx context.Context, domain string) (bool, error)
 }
 
-//
-// ---------------------------------------------------
-//                  CONFIG STRUCT
 // ---------------------------------------------------
 //
+//	CONFIG STRUCT
+//
+// ---------------------------------------------------
 type Config struct {
 	Upstream  string
 	Backup    string
@@ -37,11 +39,11 @@ type Config struct {
 	DelayMS   int64
 }
 
-//
-// ---------------------------------------------------
-//                  DNS OBJECT
 // ---------------------------------------------------
 //
+//	DNS OBJECT
+//
+// ---------------------------------------------------
 type DNS struct {
 	primary   Resolver
 	backup    Resolver
@@ -49,11 +51,11 @@ type DNS struct {
 	cache     Cache
 }
 
-//
-// ---------------------------------------------------
-//            ATTACH OPTIONAL COMPONENTS
 // ---------------------------------------------------
 //
+//	ATTACH OPTIONAL COMPONENTS
+//
+// ---------------------------------------------------
 func (d *DNS) AttachRecursive(r Resolver) {
 	d.recursive = r
 }

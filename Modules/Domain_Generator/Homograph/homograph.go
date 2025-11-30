@@ -37,7 +37,7 @@ func generateInternal(domain string) []string {
 }
 
 // ---------------------------------------------------
-// UNCHANGEABLE PUBLIC API FUNCTION 
+// UNCHANGEABLE PUBLIC API FUNCTION
 // ---------------------------------------------------
 
 func Homograph(base string) []string {

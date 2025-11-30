@@ -12,15 +12,15 @@ type Config struct {
 	RateLimit        int
 	CooldownAfter    int
 	CooldownDuration int
-	TimeoutSeconds   int   // worker timeout
-	MaxRetries       int   // worker retries
+	TimeoutSeconds   int // worker timeout
+	MaxRetries       int // worker retries
 	AutoScale        bool
 
 	// DNS settings
-	UpstreamDNS   string
-	BackupDNS     string
-	DNSRetries    int
-	DNSTimeoutMS  int64
+	UpstreamDNS  string
+	BackupDNS    string
+	DNSRetries   int
+	DNSTimeoutMS int64
 }
 
 var defaultConfig = Config{

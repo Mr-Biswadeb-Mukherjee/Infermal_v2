@@ -6,13 +6,13 @@ import (
 	"os"
 	"strings"
 
-	ts "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Typo_squat"
-	hg "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Homograph"
 	bs "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Bitsquatting"
 	cs "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Combosquat"
-	ss1 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Subdomain_squat"
-	ss2 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Soundsquat"
+	hg "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Homograph"
 	jw "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Jarowinkler"
+	ss2 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Soundsquat"
+	ss1 "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Subdomain_squat"
+	ts "github.com/official-biswadeb941/Infermal_v2/Modules/Domain_Generator/Typo_squat"
 )
 
 // Default target TLDs
