@@ -48,6 +48,7 @@ type DNS struct {
 	primary   Resolver
 	backup    Resolver
 	recursive Resolver
+	system    Resolver
 	cache     Cache
 }
 
@@ -76,4 +77,8 @@ func (d *DNS) SwapPrimary(r Resolver) {
 
 func (d *DNS) SwapBackup(r Resolver) {
 	d.backup = r
+}
+
+func (d *DNS) SwapSystem(r Resolver) {
+	d.system = r
 }

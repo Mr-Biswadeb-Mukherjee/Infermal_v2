@@ -30,8 +30,8 @@ var defaultDNS *DNS
 func InitDNS(cfg Config) (*DNS, error) {
 	d := New(cfg)
 
-	if d.primary == nil {
-		return nil, errors.New("dns: upstream resolver not set")
+	if d.primary == nil && d.system == nil {
+		return nil, errors.New("dns: no resolver configured")
 	}
 
 	// Assign to defaultDNS for backward compatibility
@@ -67,8 +67,8 @@ func Health() error {
 	if defaultDNS == nil {
 		return errors.New("dns: not initialized")
 	}
-	if defaultDNS.primary == nil {
-		return errors.New("dns: primary resolver missing")
+	if defaultDNS.primary == nil && defaultDNS.system == nil {
+		return errors.New("dns: no resolver available")
 	}
 	return nil
 }
@@ -125,6 +125,7 @@ func New(cfg Config) *DNS {
 		primary:   primary,
 		backup:    backup,
 		recursive: nil, // stays nil until AttachRecursive is used
+		system:    stubresolver.NewSystem(),
 		cache:     nil, // app.go will attach redis cache via setter
 	}
 }
@@ -157,47 +158,14 @@ func (d *DNS) Resolve(ctx context.Context, domain string) (bool, error) {
 		}
 	}
 
-	// Domain-level timeout
-	domainCtx, cancel := context.WithTimeout(ctx, 1500*time.Millisecond)
-	defer cancel()
-
-	// 1) PRIMARY RESOLVER
-	if d.primary == nil {
-		return false, errors.New("dns: primary resolver not configured")
-	}
-
-	ok, err := d.primary.Resolve(domainCtx, domain)
-	if err == nil && ok {
+	ok, err := d.resolveWithAdaptiveFallback(ctx, domain)
+	if ok {
 		d.asyncCacheWrite(domain, "1", 48*time.Hour)
 		return true, nil
 	}
 
-	// 2) BACKUP RESOLVER
-	if d.backup != nil {
-		ok2, err2 := d.backup.Resolve(domainCtx, domain)
-		if err2 == nil && ok2 {
-			d.asyncCacheWrite(domain, "1", 48*time.Hour)
-			return true, nil
-		}
-	}
-
-	// 3) RECURSIVE RESOLVER (optional)
-	if d.recursive != nil {
-		ok3, err3 := d.recursive.Resolve(domainCtx, domain)
-		if err3 == nil && ok3 {
-			d.asyncCacheWrite(domain, "1", 48*time.Hour)
-			return true, nil
-		}
-	}
-
-	// All resolvers failed → Cache negative
 	d.asyncCacheWrite(domain, "0", 12*time.Hour)
-
-	if err != nil {
-		return false, err
-	}
-
-	return false, errors.New("dns: no records found")
+	return false, err
 }
 
 //
