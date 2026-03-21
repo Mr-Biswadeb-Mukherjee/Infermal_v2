@@ -1,0 +1,63 @@
+# Security Policy
+
+## Reporting Vulnerabilities
+
+If you discover a security vulnerability in **Infermal_v2**, please report it responsibly.
+
+**Do not open a public issue for security-related vulnerabilities.**
+
+Instead:
+
+1. Contact the maintainer directly.
+2. Provide a clear and detailed description of the issue.
+3. Include reproduction steps, logs, or proof-of-concept if available.
+4. Specify affected components (e.g., domain generation, DNS resolution, runtime control, file output).
+5. Allow reasonable time for investigation and remediation before public disclosure.
+
+---
+
+## Scope
+
+This policy applies to vulnerabilities affecting:
+
+* Infermal_v2 source code and internal modules
+* Domain generation and mutation logic
+* DNS resolution engine (recursive and stub resolvers)
+* Runtime control mechanisms (rate limiter, cooldown, worker system)
+* Redis integration and caching behavior
+* Output handling (NDJSON writers, file operations)
+* Configuration handling
+
+---
+
+## Out of Scope
+
+The following are **not considered vulnerabilities** under this policy:
+
+* Misuse of the tool outside intended research or defensive contexts
+* Issues caused by incorrect system configuration or environment setup
+* Third-party service behavior (e.g., DNS providers, network failures)
+* Theoretical issues without practical impact
+* Expected behavior of domain generation or mutation algorithms
+
+---
+
+## Responsible Disclosure
+
+Researchers are expected to follow responsible disclosure practices:
+
+* Avoid actions that may disrupt systems, services, or infrastructure
+* Do not perform unauthorized scanning or exploitation
+* Do not access, modify, or delete data that does not belong to you
+* Coordinate disclosure timelines with the maintainer
+
+---
+
+## Disclaimer
+
+Infermal_v2 is a cybersecurity research and threat intelligence framework.
+
+It is intended for controlled research, analysis, and defensive security purposes.
+It is **not intended for malicious use**.
+
+Users are solely responsible for ensuring that their usage complies with applicable laws, regulations, and ethical standards.

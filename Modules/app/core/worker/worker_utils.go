@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biswadeb Mukherjee
+
+
 //worker_utils.go: Internal helpers for retries, logging, dedupe, and result handling.
 
 package worker

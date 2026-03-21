@@ -1,0 +1,126 @@
+# Contributing to Infermal_v2
+
+Thank you for your interest in contributing to **Infermal_v2**.
+
+This project is a **domain intelligence and DNS behavior analysis framework** designed with a strict, modular architecture and a focus on performance, correctness, and long-term maintainability.
+
+---
+
+## Before Contributing
+
+Please ensure you have:
+
+1. Read `README.md`
+2. Reviewed `AGENTS.md`
+3. Understood the system architecture and data flow
+4. Explored the structure inside `Modules/`
+
+All contributions must align with the existing architecture.
+Pull requests that violate structural rules will be rejected.
+
+---
+
+## Architecture Rules (Mandatory)
+
+Infermal_v2 follows strict design constraints:
+
+* **No cross-module imports**
+* **No horizontal module dependencies**
+* **All orchestration is controlled by `app.go`**
+* Modules must remain **independent and self-contained**
+
+Violating these rules breaks the system design and will not be accepted.
+
+---
+
+## Ways to Contribute
+
+### Bug Fixes
+
+* Fix incorrect behavior, crashes, or edge-case failures
+
+---
+
+### Performance Improvements
+
+* Optimize DNS resolution
+* Improve worker efficiency
+* Reduce memory or CPU overhead
+
+---
+
+### Domain Generation Enhancements
+
+* Improve mutation strategies
+* Extend DGA techniques
+* Refine scoring or filtering logic
+
+---
+
+### DNS Intelligence Enhancements
+
+* Improve record parsing or enrichment logic
+* Enhance provider attribution
+* Improve anomaly detection (TTL, fast-flux patterns)
+
+---
+
+### Runtime Improvements
+
+* Improve rate limiting
+* Enhance cooldown or back-pressure handling
+* Optimize worker scheduling
+
+---
+
+## Contribution Rules
+
+1. Follow coding guidelines defined in `AGENTS.md`
+2. Keep files under **250 lines**
+3. Keep functions small, focused, and testable
+4. Do not introduce circular dependencies
+5. Do not violate module boundaries
+6. Avoid unnecessary dependencies
+7. Preserve the existing directory structure
+8. Maintain readability and consistency across modules
+
+---
+
+## What Not To Do
+
+* Do not introduce large architectural changes without prior discussion
+* Do not move or merge modules across boundaries
+* Do not tightly couple independent components
+* Do not introduce global state
+* Do not bypass runtime controls or safety mechanisms
+* Do not add features that conflict with the system’s design principles
+
+---
+
+## Pull Request Guidelines
+
+1. Keep pull requests **small and focused**
+2. Write clear and meaningful commit messages
+3. Explain what the change does and why it is needed
+4. Include tests where applicable
+5. Ensure the project builds and tests pass
+
+Example:
+
+```
+go build -o infermal_v2 .
+go test ./...
+```
+
+---
+
+## Responsible Contribution
+
+Infermal_v2 is intended for:
+
+* Security research
+* Threat intelligence
+* DNS behavior analysis
+* Adversarial simulation for defensive understanding
+
+All contributions should align with responsible and ethical security practices.

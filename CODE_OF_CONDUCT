@@ -1,0 +1,73 @@
+# Code of Conduct
+
+## Purpose
+
+Infermal_v2 is a research-driven project focused on security, system design, and technical rigor.
+This Code of Conduct exists to maintain a **focused, respectful, and high-signal environment** for collaboration.
+
+---
+
+## Expected Conduct
+
+All participants are expected to:
+
+1. Communicate in a clear, respectful, and professional manner.
+2. Provide constructive, technically grounded feedback.
+3. Keep discussions relevant to the project and its goals.
+4. Respect differing viewpoints, especially in technical design and implementation.
+5. Prioritize clarity, correctness, and long-term maintainability over ego or opinion.
+
+---
+
+## Unacceptable Conduct
+
+The following behaviors are not tolerated:
+
+* Personal attacks, harassment, or hostile language
+* Discrimination or exclusion of any kind
+* Low-effort, non-constructive, or disruptive contributions
+* Derailing discussions away from technical or project-focused topics
+* Intentional introduction of harmful, insecure, or misleading code
+
+---
+
+## Contribution Standards
+
+Contributions should:
+
+* Align with the project's architectural principles
+* Follow existing coding and structural conventions
+* Be well-reasoned and technically justified
+* Avoid unnecessary complexity or deviation from design rules
+
+Submissions that do not meet these standards may be declined.
+
+---
+
+## Enforcement
+
+Maintainers reserve the right to:
+
+* Remove or edit comments that violate this policy
+* Reject contributions that do not meet project standards
+* Restrict or remove participation from individuals who repeatedly violate guidelines
+
+Enforcement decisions are made to preserve the integrity and direction of the project.
+
+---
+
+## Scope
+
+This Code of Conduct applies to all project spaces, including:
+
+* Issues
+* Pull Requests
+* Discussions
+* Any official communication channels related to the project
+
+---
+
+## Final Note
+
+Infermal_v2 is built with a strong emphasis on **discipline, clarity, and technical depth**.
+Respect for both the work and the people contributing to it is expected at all times.
