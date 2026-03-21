@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/official-biswadeb941/Infermal_v2/Modules/app/core/config"
+	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/config"
 )
 
 // ----------------------------------------------

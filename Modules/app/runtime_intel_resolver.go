@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	recon "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon"
-	"github.com/official-biswadeb941/Infermal_v2/Modules/app/intel"
+	recon "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon"
+	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/intel"
 )
 
 type intelNDJSONRecord struct {

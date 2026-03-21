@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/cooldown"
-	ratelimiter "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/ratelimiter"
+	cooldown "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/cooldown"
+	ratelimiter "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/ratelimiter"
 )
 
 type dnsResolver interface {

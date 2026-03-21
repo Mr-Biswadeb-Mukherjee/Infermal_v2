@@ -152,7 +152,7 @@ Output integrates directly with SIEM platforms, data pipelines, and visualizatio
 ### Installation
 
 ```bash
-git clone https://github.com/official-biswadeb941/Infermal_v2.git
+git clone https://github.com/Mr-Biswadeb-Mukherjee/Infermal_v2.git
 cd Infermal_v2
 go mod tidy
 ```

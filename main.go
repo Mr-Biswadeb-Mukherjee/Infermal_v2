@@ -7,7 +7,7 @@ package main
 import (
 	"context"
 
-	app "github.com/official-biswadeb941/Infermal_v2/Modules/app"
+	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app"
 )
 
 func main() {

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	dns "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/DNS"
+	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS"
 )
 
 // ------------------------------------------------------------

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	stubresolver "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/DNS/sResolver"
+	stubresolver "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS/sResolver"
 )
 
 //

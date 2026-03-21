@@ -7,7 +7,7 @@ package recon
 import (
 	"context"
 
-	dnsengine "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/DNS"
+	dnsengine "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS"
 )
 
 // DNS interface defines only what recon actually uses.

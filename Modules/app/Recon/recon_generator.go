@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	mutationgen "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/Mutation"
-	dgagen "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga"
+	mutationgen "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/Mutation"
+	dgagen "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga"
 )
 
 const lowEntropyDropThreshold = 1.10

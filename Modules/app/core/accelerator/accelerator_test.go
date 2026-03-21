@@ -11,7 +11,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/official-biswadeb941/Infermal_v2/Modules/app/core/accelerator"
+	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/accelerator"
 	"github.com/stretchr/testify/assert"
 )
 

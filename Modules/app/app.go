@@ -12,15 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	recon "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon"
+	recon "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon"
 
-	config "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/config"
-	cooldown "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/cooldown"
-	logger "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/logger"
-	ratelimiter "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/ratelimiter"
-	redis "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/redis"
-	ui "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/ui"
-	wpkg "github.com/official-biswadeb941/Infermal_v2/Modules/app/core/worker"
+	config "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/config"
+	cooldown "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/cooldown"
+	logger "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/logger"
+	ratelimiter "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/ratelimiter"
+	redis "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/redis"
+	ui "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/ui"
+	wpkg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/core/worker"
 )
 
 func Run(parentCtx context.Context) error {

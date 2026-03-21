@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon"
+	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon"
 )
 
 // mockDNS implements the DNS interface for testing.

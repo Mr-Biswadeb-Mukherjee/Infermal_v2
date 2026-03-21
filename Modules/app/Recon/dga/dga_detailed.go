@@ -8,12 +8,12 @@ import (
 	"sort"
 	"strings"
 
-	bs "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/bitsquatting"
-	cs "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/combo_squat"
-	hg "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/homograph"
-	ss2 "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/sound_squat"
-	ss1 "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/subdomain_squat"
-	ts "github.com/official-biswadeb941/Infermal_v2/Modules/app/Recon/dga/typo_squat"
+	bs "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/bitsquatting"
+	cs "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/combo_squat"
+	hg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/homograph"
+	ss2 "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/sound_squat"
+	ss1 "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/subdomain_squat"
+	ts "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/dga/typo_squat"
 )
 
 const (
