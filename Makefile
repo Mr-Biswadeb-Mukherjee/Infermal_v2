@@ -15,6 +15,9 @@ CYAN    = \033[1;36m
 DIM     = \033[2m
 RESET   = \033[0m
 
+ENGINE_DIR = Engine
+GO_ENGINE  = go -C $(ENGINE_DIR)
+
 # ============================================================
 #  DEFAULT 
 # ============================================================
@@ -58,7 +61,7 @@ check-tools:
 # ============================================================
 autofmt:
 	@echo "\n$(BLUE)🧹 Formatting check...$(RESET)"
-	@files=$$(gofmt -l .); \
+	@files=$$(gofmt -l main.go $(ENGINE_DIR) scripts); \
 	if [ -n "$$files" ]; then \
 		echo "$(YELLOW)⚠️ Fixing formatting...$(RESET)"; \
 		echo "$$files" | xargs gofmt -w; \
@@ -71,18 +74,18 @@ autofmt:
 # ============================================================
 vet:
 	@echo "\n$(BLUE)🔍 go vet...$(RESET)"
-	@go vet ./... || true
+	@$(GO_ENGINE) vet ./... || true
 
 lint:
 	@echo "\n$(BLUE)🧠 golangci-lint...$(RESET)"
-	@golangci-lint run ./... --color=always || true
+	@cd $(ENGINE_DIR) && golangci-lint run ./... --color=always || true
 
 # ============================================================
 #  SECURITY
 # ============================================================
 security:
 	@echo "\n$(BLUE)🛡️ gosec...$(RESET)"
-	@gosec ./... || true
+	@cd $(ENGINE_DIR) && gosec ./... || true
 
 # ============================================================
 #  SECRETS Leakage
@@ -120,14 +123,14 @@ arch:
 # ============================================================
 complexity:
 	@echo "\n$(BLUE)⚙️ Complexity check...$(RESET)"
-	@gocyclo -over 10 . || echo "$(GREEN)✅ Acceptable complexity$(RESET)"
+	@gocyclo -over 10 main.go $(ENGINE_DIR) scripts || echo "$(GREEN)✅ Acceptable complexity$(RESET)"
 
 # ============================================================
 #  SLOC
 # ============================================================
 sloc:
 	@echo "\n$(BLUE)📄 Detailed SLOC analysis (per file)...$(RESET)"
-	@cloc . --include-lang=Go --by-file --quiet --csv \
+	@cloc main.go $(ENGINE_DIR) scripts --include-lang=Go --by-file --quiet --csv \
 	| awk -F',' \
 	-v green="$(GREEN)" -v yellow="$(YELLOW)" -v red="$(RED)" -v reset="$(RESET)" \
 	'BEGIN { \
@@ -158,7 +161,7 @@ sloc:
 # ============================================================
 test:
 	@echo "\n$(BLUE)🧪 Running tests...$(RESET)"
-	@go test ./... -v || true
+	@$(GO_ENGINE) test ./... -v || true
 
 # ============================================================
 #  COVERAGE 
@@ -166,11 +169,11 @@ test:
 coverage:
 	@echo "\n$(BLUE)📊 Coverage analysis...$(RESET)"
 
-	@go test ./... -coverpkg=./... -coverprofile=coverage.out || true
+	@$(GO_ENGINE) test ./... -coverpkg=./... -coverprofile=../coverage.out || true
 
 	@[ -s coverage.out ] || { echo "$(RED)❌ coverage.out missing$(RESET)"; exit 1; }
 
-	@raw=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+	@raw=$$($(GO_ENGINE) tool cover -func=../coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
 	penalty=0; \
 	if [ -f arch_score.txt ]; then penalty=$$(cat arch_score.txt); fi; \
 	final=$$(echo "$$raw - $$penalty" | bc); \
@@ -185,8 +188,8 @@ coverage:
 # ============================================================
 deps:
 	@echo "\n$(BLUE)📦 Dependency check...$(RESET)"
-	@go mod tidy
-	@go mod verify
+	@$(GO_ENGINE) mod tidy
+	@$(GO_ENGINE) mod verify
 
 # ============================================================
 #  PRE-PUSH HOOK

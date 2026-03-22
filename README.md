@@ -190,7 +190,7 @@ pool_size: 10
 
 ### Input
 
-Place target keywords in `Input/Keywords.csv`, one keyword per row. The generator will produce all permutations across all enabled algorithms.
+Place target keywords in `Engine/Input/Keywords.csv`, one keyword per row. The generator will produce all permutations across all enabled algorithms.
 
 ```
 google
@@ -202,7 +202,7 @@ binance
 ### Run
 
 ```bash
-go run main.go
+go run .
 ```
 
 On completion:
@@ -368,4 +368,3 @@ Licensed under the Apache License 2.0.</center></h5>
 <div align="center">
 <sub>Built for operators who need answers, not dashboards.</sub>
 </div>
-

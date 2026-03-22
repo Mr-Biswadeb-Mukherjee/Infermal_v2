@@ -24,7 +24,7 @@ const (
 )
 
 func runGoList() ([]Package, error) {
-	cmd := exec.Command("go", "list", "-json", "./...")
+	cmd := exec.Command("go", "-C", "Engine", "list", "-json", "./...")
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err

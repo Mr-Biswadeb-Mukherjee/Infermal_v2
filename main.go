@@ -3,19 +3,8 @@
 
 package main
 
-import (
-	"context"
-
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app"
-)
+import engine "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine"
 
 func main() {
-	// No signal handling — pure context
-	ctx := context.Background()
-
-	if err := app.Run(ctx); err != nil {
-		println("Error:", err.Error())
-	}
-
-	println("Shutdown complete.")
+	engine.Run()
 }
