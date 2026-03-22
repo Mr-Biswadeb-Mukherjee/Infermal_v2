@@ -13,7 +13,7 @@ Please ensure you have:
 1. Read `README.md`
 2. Reviewed `AGENTS.md`
 3. Understood the system architecture and data flow
-4. Explored the structure inside `Engine/Modules/`
+4. Explored the structure inside `Engine/`
 
 All contributions must align with the existing architecture.
 Pull requests that violate structural rules will be rejected.

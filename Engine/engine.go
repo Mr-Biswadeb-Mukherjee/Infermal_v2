@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/Modules/app"
+	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
 )
 
 var runApp = app.Run
