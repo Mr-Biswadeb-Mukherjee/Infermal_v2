@@ -187,3 +187,35 @@ func TestCSVWriter_BatchFlush(t *testing.T) {
 		t.Fatalf("batch flush failed: got %d lines", len(lines))
 	}
 }
+
+func TestCSVWriter_CreatesPrivateFiles(t *testing.T) {
+	tmp := t.TempDir()
+	file := filepath.Join(tmp, "private.csv")
+
+	w, err := filewriter.SafeNewAtomicCSVWriter(file)
+	if err != nil {
+		t.Fatalf("failed to create atomic writer: %v", err)
+	}
+	w.WriteRow([]string{"alpha", "beta"})
+	time.Sleep(300 * time.Millisecond)
+
+	tmpInfo, err := os.Stat(file + ".tmp")
+	if err != nil {
+		t.Fatalf("stat temp file: %v", err)
+	}
+	if tmpInfo.Mode().Perm()&0o077 != 0 {
+		t.Fatalf("expected private temp file permissions, got %o", tmpInfo.Mode().Perm())
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("close failed: %v", err)
+	}
+
+	info, err := os.Stat(file)
+	if err != nil {
+		t.Fatalf("stat final file: %v", err)
+	}
+	if info.Mode().Perm()&0o077 != 0 {
+		t.Fatalf("expected private file permissions, got %o", info.Mode().Perm())
+	}
+}

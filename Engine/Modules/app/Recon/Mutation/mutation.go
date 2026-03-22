@@ -6,7 +6,6 @@ package mutation
 import (
 	"encoding/csv"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"unicode"
@@ -29,7 +28,7 @@ func sanitizeKeyword(value string) string {
 }
 
 func loadKeywords(path string) ([]string, error) {
-	file, err := os.Open(path)
+	file, err := openMutationCSVFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("open csv: %w", err)
 	}

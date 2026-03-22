@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -45,7 +44,7 @@ func loadModuleConfig(path string) (moduleConfig, error) {
 		return defaultModuleConfig, err
 	}
 
-	file, err := os.Open(path)
+	file, err := openSettingsFile(path)
 	if err != nil {
 		return defaultModuleConfig, fmt.Errorf("open settings: %w", err)
 	}
@@ -64,7 +63,7 @@ func loadModuleConfig(path string) (moduleConfig, error) {
 }
 
 func ensureMutationConfig(path string) error {
-	content, err := os.ReadFile(path)
+	content, err := readSettingsContent(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return createMutationConfig(path)
@@ -78,7 +77,7 @@ func ensureMutationConfig(path string) error {
 		return nil
 	}
 
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
+	file, err := openSettingsAppendFile(path)
 	if err != nil {
 		return fmt.Errorf("append settings: %w", err)
 	}
@@ -91,11 +90,7 @@ func ensureMutationConfig(path string) error {
 }
 
 func createMutationConfig(path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("mkdir settings dir: %w", err)
-	}
-
-	file, err := os.Create(path)
+	file, err := createSettingsFile(path)
 	if err != nil {
 		return fmt.Errorf("create settings: %w", err)
 	}

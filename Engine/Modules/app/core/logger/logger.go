@@ -123,7 +123,7 @@ func (l *Logger) runWriter() {
 		}
 	}()
 
-	file, err := os.OpenFile(l.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	file, err := os.OpenFile(l.filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		fmt.Printf("logger open failed path=%s err=%v\n", l.filePath, err)
 		l.drainEntries()
@@ -203,7 +203,7 @@ func (l *Logger) setCloseError(err error) {
 }
 
 func buildLogPath(module, logDir string) string {
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
+	if err := os.MkdirAll(logDir, 0o750); err != nil {
 		logDir = "."
 	}
 	return filepath.Join(logDir, logFileName(module))

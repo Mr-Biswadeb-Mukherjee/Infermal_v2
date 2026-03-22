@@ -69,7 +69,7 @@ func normalizeFlushEvery(flushEvery time.Duration) time.Duration {
 }
 
 func (fw *NDJSONWriter) open() error {
-	f, err := os.OpenFile(fw.filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	f, err := os.OpenFile(fw.filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}

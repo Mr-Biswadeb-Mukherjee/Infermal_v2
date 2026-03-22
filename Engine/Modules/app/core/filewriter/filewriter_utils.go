@@ -94,7 +94,7 @@ func (fw *CSVWriter) openNormal() error {
 		flags |= os.O_TRUNC
 	}
 
-	f, err := os.OpenFile(fw.filename, flags, 0o644)
+	f, err := os.OpenFile(fw.filename, flags, 0o600)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (fw *CSVWriter) openNormal() error {
 }
 
 func (fw *CSVWriter) openAtomic() error {
-	f, err := os.OpenFile(fw.atomicTemp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
+	f, err := os.OpenFile(fw.atomicTemp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}

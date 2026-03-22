@@ -74,6 +74,27 @@ func TestNDJSONWriter_EmptyCloseWritesEmptyFile(t *testing.T) {
 	}
 }
 
+func TestNDJSONWriter_CreatesPrivateFile(t *testing.T) {
+	tmp := t.TempDir()
+	file := filepath.Join(tmp, "secure.ndjson")
+
+	w, err := filewriter.SafeNewNDJSONWriter(file)
+	if err != nil {
+		t.Fatalf("failed to create ndjson writer: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("close failed: %v", err)
+	}
+
+	info, err := os.Stat(file)
+	if err != nil {
+		t.Fatalf("stat failed: %v", err)
+	}
+	if info.Mode().Perm()&0o077 != 0 {
+		t.Fatalf("expected private file permissions, got %o", info.Mode().Perm())
+	}
+}
+
 func readNDJSONRecords(t *testing.T, file string) []dnsIntelNDJSON {
 	t.Helper()
 
