@@ -11,6 +11,19 @@ import (
 	"github.com/miekg/dns"
 )
 
+type dnsClient interface {
+	Exchange(m *dns.Msg, address string) (*dns.Msg, time.Duration, error)
+}
+
+var newDNSClient = func(timeout time.Duration) dnsClient {
+	return &dns.Client{
+		Net:            "udp",
+		Timeout:        timeout,
+		UDPSize:        4096,
+		SingleInflight: true,
+	}
+}
+
 // StubResolver performs a DNS query against ONE upstream DNS server.
 type StubResolver struct {
 	Upstream string        // primary DNS server (must be provided)
@@ -55,12 +68,7 @@ func (r *StubResolver) resolveOnce(ctx context.Context, fqdn string, qtype uint1
 		return nil, errors.New("stubresolver: upstream not configured")
 	}
 
-	client := &dns.Client{
-		Net:            "udp",
-		Timeout:        r.Timeout, // internal timeout as fallback
-		UDPSize:        4096,
-		SingleInflight: true,
-	}
+	client := newDNSClient(r.Timeout)
 
 	msg := new(dns.Msg)
 	msg.SetQuestion(fqdn, qtype)

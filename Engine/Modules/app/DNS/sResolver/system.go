@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+var lookupIPAddr = func(resolver *net.Resolver, ctx context.Context, name string) ([]net.IPAddr, error) {
+	return resolver.LookupIPAddr(ctx, name)
+}
+
 // SystemResolver delegates lookups to the host OS resolver stack.
 type SystemResolver struct {
 	Resolver *net.Resolver
@@ -32,7 +36,7 @@ func (r *SystemResolver) Resolve(ctx context.Context, domain string) (bool, erro
 		resolver = net.DefaultResolver
 	}
 
-	ips, err := resolver.LookupIPAddr(ctx, name)
+	ips, err := lookupIPAddr(resolver, ctx, name)
 	if err != nil {
 		return false, err
 	}
