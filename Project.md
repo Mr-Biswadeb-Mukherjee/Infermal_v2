@@ -30,17 +30,18 @@ Infermal_v2/
 │   ├── runtime_progress.go          # Live CLI progress rows
 │   ├── runtime_tuner.go             # Adaptive controller
 │   │
+│   ├── DNS/
+│   │   ├── dns.go                   # Engine entry point
+│   │   ├── dns_utils.go
+│   │   ├── dns_fallback.go
+│   │   ├── rResolver/               # Recursive resolver
+│   │   └── sResolver/               # Stub resolver
+│   │
 │   ├── Recon/
 │   │   ├── recon.go                 # DNS interface + Recon struct
 │   │   ├── recon_generator.go       # GenerateScoredDomains()
 │   │   ├── recon_generator_human.go # Human-likeness filter
 │   │   ├── recon_generator_validate.go
-│   │   ├── DNS/
-│   │   │   ├── dns.go               # Engine entry point
-│   │   │   ├── dns_utils.go
-│   │   │   ├── dns_fallback.go
-│   │   │   ├── rResolver/           # Recursive resolver
-│   │   │   └── sResolver/           # Stub resolver
 │   │   ├── dga/                     # DGA algorithm implementations
 │   │   │   ├── bitsquatting/
 │   │   │   ├── typo_squat/

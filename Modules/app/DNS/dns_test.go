@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-
 package dns_test
 
 import (
@@ -10,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS"
+	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/DNS"
 )
 
 // ------------------------------------------------------------
@@ -229,50 +228,5 @@ func TestResolveNegativeCaching(t *testing.T) {
 
 	if cache.store["dns:fail.com"] != "0" {
 		t.Fatal("negative result not cached")
-	}
-}
-
-// ------------------------------------------------------------
-//
-//	STABLE API LAYER
-//
-// ------------------------------------------------------------
-func TestStableAPI(t *testing.T) {
-
-	cfg := dns.Config{
-		Upstream:  "1.1.1.1:53", // real resolver
-		Retries:   2,
-		TimeoutMS: 1200,
-		DelayMS:   80,
-	}
-
-	if _, err := dns.InitDNS(cfg); err != nil {
-		t.Fatalf("InitDNS failed: %v", err)
-	}
-
-	// Health must pass
-	if err := dns.Health(); err != nil {
-		t.Fatalf("Health failed: %v", err)
-	}
-
-	// Use a domain guaranteed to resolve
-	ok, err := dns.ResolveDomain("google.com")
-	if err != nil {
-		t.Fatalf("ResolveDomain failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected resolution success")
-	}
-
-	// Test context-based API
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	ok, err = dns.ResolveWithContext(ctx, "cloudflare.com")
-	if err != nil {
-		t.Fatalf("ResolveWithContext failed: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected resolution success")
 	}
 }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-
 package dns_test
 
 import (
@@ -10,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS"
+	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/DNS"
 )
 
 func TestResolveSystemFallback(t *testing.T) {

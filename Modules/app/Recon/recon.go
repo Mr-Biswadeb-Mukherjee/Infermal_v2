@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-
 package recon
 
 import (
 	"context"
 
-	dnsengine "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/Recon/DNS"
+	dnsengine "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Modules/app/DNS"
 )
 
 // DNS interface defines only what recon actually uses.

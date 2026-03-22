@@ -1,0 +1,7 @@
+
+🏛️  Architectural Analysis Report
+────────────────────────────────────────
+❌ [HORIZONTAL] Modules/app/Recon → Modules/app/DNS
+────────────────────────────────────────
+📉 Violation Score: 3
+📊 Suggested Coverage Penalty: -1.5%

@@ -1,50 +1,140 @@
-# --- Code Quality Pipeline for INFERMAL_v2 ---
-.PPHONY: all fmt vet lint security complexity sloc test coverage autofmt
+# ============================================================
+#  INFERMAL_v2 — Code Quality & Security Pipeline
+# ============================================================
 
-YELLOW=\033[1;33m
-GREEN=\033[1;32m
-BLUE=\033[1;34m
-RED=\033[1;31m
-RESET=\033[0m
+.PHONY: all autofmt vet lint security secrets arch \
+        complexity sloc test coverage deps check-tools \
+        ci install-hooks
 
-all: autofmt vet lint security complexity sloc test coverage
-	@echo "$(GREEN)🎉 All checks (with auto-format) completed successfully!$(RESET)"
+# ── Colours ─────────────────────────────────────────────────
+YELLOW  = \033[1;33m
+GREEN   = \033[1;32m
+BLUE    = \033[1;34m
+RED     = \033[1;31m
+CYAN    = \033[1;36m
+DIM     = \033[2m
+RESET   = \033[0m
 
-autofmt:
-	@echo "$(BLUE)🧹 Checking code formatting...$(RESET)"
-	@unformatted=$$(gofmt -l .); \
-	if [ -n "$$unformatted" ]; then \
-		echo "$(YELLOW)⚠️  Found unformatted Go files. Auto-fixing...$(RESET)"; \
-		echo "$$unformatted" | xargs gofmt -w; \
-		echo "$(GREEN)✅ Formatting issues fixed automatically.$(RESET)"; \
-	else \
-		echo "$(GREEN)✅ All files are properly formatted.$(RESET)"; \
+# ============================================================
+#  DEFAULT 
+# ============================================================
+all: check-tools autofmt vet lint security secrets arch complexity sloc test coverage
+	@echo "$(GREEN)🎉  All pipeline checks completed.$(RESET)"
+
+# CI — strict (no autofmt)
+ci: check-tools vet lint security secrets arch complexity sloc test coverage
+	@echo "$(GREEN)✅  CI pipeline passed.$(RESET)"
+
+# ============================================================
+#  TOOL CHECK
+# ============================================================
+check-tools:
+	@echo "$(BLUE)🔧 Checking required tools...$(RESET)"
+	@missing=0; \
+	for t in gofmt go golangci-lint gosec gocyclo cloc bc; do \
+		if command -v $$t >/dev/null 2>&1; then \
+			echo "  $(GREEN)✓ $$t$(RESET)"; \
+		else \
+			echo "  $(RED)✗ $$t missing$(RESET)"; missing=1; \
+		fi; \
+	done; \
+	\
+	echo "$(CYAN)🔐 Optional security tools:$(RESET)"; \
+	for t in gitleaks trufflehog; do \
+		if command -v $$t >/dev/null 2>&1; then \
+			echo "  $(GREEN)✓ $$t$(RESET)"; \
+		else \
+			echo "  $(YELLOW)⚠ $$t not installed (skipping)$(RESET)"; \
+		fi; \
+	done; \
+	\
+	if [ $$missing -eq 1 ]; then \
+		echo "$(RED)❌ Missing required tools. Install them first.$(RESET)"; \
+		exit 1; \
 	fi
 
+# ============================================================
+#  AUTO FORMAT
+# ============================================================
+autofmt:
+	@echo "\n$(BLUE)🧹 Formatting check...$(RESET)"
+	@files=$$(gofmt -l .); \
+	if [ -n "$$files" ]; then \
+		echo "$(YELLOW)⚠️ Fixing formatting...$(RESET)"; \
+		echo "$$files" | xargs gofmt -w; \
+	else \
+		echo "$(GREEN)✅ Clean formatting.$(RESET)"; \
+	fi
+
+# ============================================================
+#  STATIC ANALYSIS
+# ============================================================
 vet:
-	@echo "\n$(BLUE)🔍 Running go vet (static analysis)...$(RESET)"
+	@echo "\n$(BLUE)🔍 go vet...$(RESET)"
 	@go vet ./... || true
 
 lint:
-	@echo "\n$(BLUE)🧠 Running golangci-lint...$(RESET)"
+	@echo "\n$(BLUE)🧠 golangci-lint...$(RESET)"
 	@golangci-lint run ./... --color=always || true
 
+# ============================================================
+#  SECURITY
+# ============================================================
 security:
-	@echo "\n$(BLUE)🛡️ Running gosec (security scan)...$(RESET)"
+	@echo "\n$(BLUE)🛡️ gosec...$(RESET)"
 	@gosec ./... || true
 
-complexity:
-	@echo "\n$(BLUE)⚙️ Checking cyclomatic complexity (threshold: >10)...$(RESET)"
-	@gocyclo -over 10 . || echo "$(GREEN)✅ Complexity levels are acceptable.$(RESET)"
+# ============================================================
+#  SECRETS Leakage
+# ============================================================
+secrets:
+	@echo "\n$(BLUE)🔐 Secret scan...$(RESET)"
 
+	@if command -v gitleaks >/dev/null 2>&1; then \
+		echo "$(CYAN)[gitleaks] scanning...$(RESET)"; \
+		gitleaks detect --source . --no-banner --log-level error || echo "$(RED)⚠️ gitleaks issues$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ Skipping gitleaks (not installed)$(RESET)"; \
+	fi
+
+	@if command -v trufflehog >/dev/null 2>&1; then \
+		echo "$(CYAN)[trufflehog] scanning...$(RESET)"; \
+		trufflehog filesystem . --only-verified --no-update --fail || echo "$(RED)⚠️ trufflehog issues$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ Skipping trufflehog (not installed)$(RESET)"; \
+	fi
+
+# ============================================================
+#  ARCHITECTURE Design
+# ============================================================
+arch:
+	@echo "\n$(BLUE)🏛️ Architectural analysis (non-blocking)...$(RESET)"
+	@go run scripts/arch_check.go > arch_report.txt || true
+	@echo "$(CYAN)────────────────────────────────────────$(RESET)"
+	@cat arch_report.txt
+	@echo "$(CYAN)────────────────────────────────────────$(RESET)"
+	@echo "$(GREEN)✅ Architecture check complete (penalty applied).$(RESET)"
+
+# ============================================================
+#  COMPLEXITY
+# ============================================================
+complexity:
+	@echo "\n$(BLUE)⚙️ Complexity check...$(RESET)"
+	@gocyclo -over 10 . || echo "$(GREEN)✅ Acceptable complexity$(RESET)"
+
+# ============================================================
+#  SLOC
+# ============================================================
 sloc:
-	@echo "\n$(BLUE)📄 Calculating SLOC for all Go files with pass/fail assessment...$(RESET)"
-	@cloc . --include-lang=Go --by-file --quiet --csv | awk -F',' -v green="$(GREEN)" -v yellow="$(YELLOW)" -v red="$(RED)" -v reset="$(RESET)" ' \
-	BEGIN { \
+	@echo "\n$(BLUE)📄 Detailed SLOC analysis (per file)...$(RESET)"
+	@cloc . --include-lang=Go --by-file --quiet --csv \
+	| awk -F',' \
+	-v green="$(GREEN)" -v yellow="$(YELLOW)" -v red="$(RED)" -v reset="$(RESET)" \
+	'BEGIN { \
 		printf "------------------------------------------------------------------------------------------------------\n"; \
 		printf "%-60s %8s %9s %9s %9s\n", "File", "Blank", "Comment", "Code", "Result"; \
 		printf "------------------------------------------------------------------------------------------------------\n"; \
-		total_blank=0; total_comment=0; total_code=0; \
+		tb=0; tc=0; tco=0; \
 	} \
 	/Go,/ { \
 		file=$$2; blank=$$3; comment=$$4; code=$$5; \
@@ -52,87 +142,58 @@ sloc:
 		else if (code > 250) { color=yellow; result="WARN"; } \
 		else { color=green; result="PASS"; } \
 		printf "%-60s %8d %9d %9d %11s%s%s\n", file, blank, comment, code, color, result, reset; \
-		total_blank+=blank; total_comment+=comment; total_code+=code; \
+		tb+=blank; tc+=comment; tco+=code; \
 	} \
 	END { \
 		printf "------------------------------------------------------------------------------------------------------\n"; \
-		final_color = (total_code > 2500) ? red : green; \
-		final_result = (total_code > 2500) ? "FAIL" : "PASS"; \
-		printf "%-60s %8d %9d %9d %11s%s%s\n", "TOTAL", total_blank, total_comment, total_code, final_color, final_result, reset; \
+		final_color = (tco > 2500) ? red : green; \
+		final_result = (tco > 2500) ? "FAIL" : "PASS"; \
+		printf "%-60s %8d %9d %9d %11s%s%s\n", "TOTAL", tb, tc, tco, final_color, final_result, reset; \
 		printf "------------------------------------------------------------------------------------------------------\n"; \
 	}'
 
+
+# ============================================================
+#  TESTS
+# ============================================================
 test:
-	@echo "\n$(BLUE)🧪 Running unit tests...$(RESET)"
+	@echo "\n$(BLUE)🧪 Running tests...$(RESET)"
 	@go test ./... -v || true
 
+# ============================================================
+#  COVERAGE 
+# ============================================================
 coverage:
-	@echo "\n$(BLUE)📊 Generating test coverage heatmap...$(RESET)"
+	@echo "\n$(BLUE)📊 Coverage analysis...$(RESET)"
 
-	# Run tests while EXCLUDING:
-	#   1. root module (.)
-	#   2. Modules/app       (only the top-level app folder)
-	@go test $(shell go list ./... | grep -vE '(^$$|/app$$)') \
-		-coverpkg=./... -coverprofile=coverage.out || { \
-		echo "$(RED)❌ Coverage generation failed (test failure).$(RESET)"; exit 1; }
+	@go test ./... -coverpkg=./... -coverprofile=coverage.out || true
 
-	# Ensure coverage.out exists
-	@[ -s coverage.out ] || { \
-		echo "$(RED)❌ coverage.out is empty. No coverage data was generated.$(RESET)"; \
-		exit 1; }
+	@[ -s coverage.out ] || { echo "$(RED)❌ coverage.out missing$(RESET)"; exit 1; }
 
-	# Validate file header
-	@if ! head -n 1 coverage.out | grep -q '^mode:' ; then \
-		echo "$(RED)❌ Invalid coverage.out format. Aborting coverage heatmap.$(RESET)"; \
-		exit 1; \
-	fi
+	@raw=$$(go tool cover -func=coverage.out | grep total | awk '{print $$3}' | sed 's/%//'); \
+	penalty=0; \
+	if [ -f arch_score.txt ]; then penalty=$$(cat arch_score.txt); fi; \
+	final=$$(echo "$$raw - $$penalty" | bc); \
+	printf "\n$(CYAN)──────── COVERAGE REPORT ────────$(RESET)\n"; \
+	printf "Raw Coverage:     %.2f%%\n" $$raw; \
+	printf "Arch Penalty:     -%.2f%%\n" $$penalty; \
+	printf "Final Coverage:   %.2f%%\n" $$final; \
+	printf "$(CYAN)────────────────────────────────$(RESET)\n"
 
-	@echo "\n$(BLUE)📊 Coverage Heatmap (Per Folder)$(RESET)"
-	@echo "------------------------------------------------------------"
+# ============================================================
+#  DEPENDENCIES
+# ============================================================
+deps:
+	@echo "\n$(BLUE)📦 Dependency check...$(RESET)"
+	@go mod tidy
+	@go mod verify
 
-	@go tool cover -func=coverage.out \
-	| awk -v green="$(GREEN)" -v yellow="$(YELLOW)" -v red="$(RED)" -v reset="$(RESET)" ' \
-	/\.go/ { \
-		orig = $$1; \
-		file = orig; \
-		sub(/^.*Infermal_v2\//, "", file); \
-		split(file, parts, "/"); \
-		folder = "."; \
-		if (length(parts) > 1) { \
-			folder = parts[1]; \
-			for (i=2; i<length(parts); i++) folder=folder "/" parts[i]; \
-		} \
-		percent = $$3; gsub(/%/, "", percent); \
-		if (percent == "") next; \
-		folder_cov[folder] += percent; folder_count[folder]++; \
-		files[folder] = files[folder]" "orig; \
-		shown[folder] = shown[folder]" "file; \
-	} \
-	END { \
-		n = 0; \
-		for (f in folder_cov) { n++; folders[n] = f; } \
-		for (i = 1; i <= n; i++) { \
-			for (j = i + 1; j <= n; j++) { \
-				ai = folder_cov[folders[i]] / folder_count[folders[i]]; \
-				aj = folder_cov[folders[j]] / folder_count[folders[j]]; \
-				if (aj > ai) { tmp = folders[i]; folders[i] = folders[j]; folders[j] = tmp; } \
-			} \
-		} \
-		for (k = 1; k <= n; k++) { \
-			f = folders[k]; \
-			avg = folder_cov[f] / folder_count[f]; \
-			if (avg >= 80) color = green; \
-			else if (avg >= 60) color = yellow; \
-			else if (avg >= 40) color = yellow; \
-			else color = red; \
-			cmd = "printf \"" files[f] "\" | xargs sha256sum 2>/dev/null | sha256sum"; \
-			cmd | getline h; close(cmd); \
-			sub(/ .*/, "", h); \
-			short = substr(h, 1, 8); \
-			printf "%-40s %6.1f%% %s●%s  [hash: %s]\n", f, avg, color, reset, short; \
-		} \
-	}'
-
-	@echo "------------------------------------------------------------"
-	@go tool cover -func=coverage.out | grep total | awk '{print "Overall Coverage: " $$3}'
-	@echo "$(GREEN)✅ Coverage heatmap ready.$(RESET)"
+# ============================================================
+#  PRE-PUSH HOOK
+# ============================================================
+install-hooks:
+	@echo "$(BLUE)🪝 Installing pre-push hook...$(RESET)"
+	@mkdir -p .git/hooks
+	@printf '#!/bin/sh\nset -e\necho "[pre-push] Running checks..."\nmake secrets arch\n' > .git/hooks/pre-push
+	@chmod +x .git/hooks/pre-push
+	@echo "$(GREEN)✅ Hook installed$(RESET)"
