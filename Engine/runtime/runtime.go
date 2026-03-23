@@ -15,7 +15,6 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 	defer rt.Close()
 
-	ctx := normalizeContext(parentCtx)
 	domains, generatedMeta, err := loadGeneratedDomains(rt.paths.KeywordsCSV, rt.modules)
 	if err != nil {
 		rt.logs.app.Alert("domain generation failed: %v", err)
@@ -32,21 +31,14 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 
 	runner := newScanRunner(rt, total)
-	modules, err := rt.newModules(ctx, generatedMeta, runner.onIntelDone())
+	modules, err := rt.newModules(parentCtx, generatedMeta, runner.onIntelDone())
 	if err != nil {
 		rt.logs.app.Alert("intel pipeline init failed: %v", err)
 		return fmt.Errorf("error starting dns intel pipeline: %w", err)
 	}
 
-	resolved := runner.run(ctx, domains, modules)
+	resolved := runner.run(parentCtx, domains, modules)
 	rt.finishRun(total, resolved)
 	rt.logs.app.Info("run completed generated=%d resolved=%d", total, resolved)
 	return nil
-}
-
-func normalizeContext(parentCtx context.Context) context.Context {
-	if parentCtx != nil {
-		return parentCtx
-	}
-	return context.Background()
 }

@@ -5,49 +5,10 @@ package engine
 
 import (
 	"context"
-	"time"
 
 	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	appintel "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/intel"
 	runtime "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/runtime"
 )
-
-func buildRuntimeDependencies(deps Dependencies, modules runtime.ModuleFactory) runtime.Dependencies {
-	return runtime.Dependencies{
-		Config: runtime.Config{
-			RateLimit:      deps.Config.RateLimit,
-			TimeoutSeconds: deps.Config.TimeoutSeconds,
-			MaxRetries:     deps.Config.MaxRetries,
-			AutoScale:      deps.Config.AutoScale,
-			UpstreamDNS:    deps.Config.UpstreamDNS,
-			BackupDNS:      deps.Config.BackupDNS,
-			DNSRetries:     deps.Config.DNSRetries,
-			DNSTimeoutMS:   deps.Config.DNSTimeoutMS,
-		},
-		Paths: runtime.Paths{
-			KeywordsCSV:     deps.Paths.KeywordsCSV,
-			DNSIntelOutput:  deps.Paths.DNSIntelOutput,
-			GeneratedOutput: deps.Paths.GeneratedOutput,
-		},
-		Startup: deps.Startup,
-		Logs: runtime.LogSet{
-			App:         deps.Logs.App,
-			DNS:         deps.Logs.DNS,
-			RateLimiter: deps.Logs.RateLimiter,
-		},
-		Cache:   deps.Cache,
-		Limiter: deps.Limiter,
-		InitLimiter: func(_ runtime.CacheStore, window time.Duration, maxHits int64, logger runtime.ModuleLogger) {
-			deps.Limiter.Init(deps.Cache, window, maxHits, toAppLogger(logger, deps.Logs.RateLimiter))
-		},
-		WorkerPools: workerPoolFactoryAdapter{inner: deps.WorkerPools},
-		Cooldowns:   cooldownFactoryAdapter{inner: deps.Cooldowns},
-		Adaptive:    adaptiveFactoryAdapter{inner: deps.Adaptive},
-		Writers:     writerFactoryAdapter{inner: deps.Writers},
-		Modules:     modules,
-		PrintLine:   printLine,
-	}
-}
 
 type appResolverBuilder func(
 	cfg app.Config,
@@ -58,7 +19,7 @@ type appResolverBuilder func(
 
 type appDomainGenerator func(path string) ([]app.GeneratedDomain, error)
 
-type appIntelServiceBuilder func(dnsTimeoutMS int64) *appintel.DNSIntelService
+type appIntelServiceBuilder func(dnsTimeoutMS int64) app.DNSIntelService
 
 type moduleFactory struct {
 	newResolver     appResolverBuilder
@@ -111,7 +72,7 @@ func (m moduleFactory) NewDNSIntelService(dnsTimeoutMS int64) runtime.DNSIntelSe
 }
 
 type intelServiceAdapter struct {
-	inner *appintel.DNSIntelService
+	inner app.DNSIntelService
 }
 
 func (a intelServiceAdapter) Run(
@@ -122,9 +83,9 @@ func (a intelServiceAdapter) Run(
 		return nil, nil
 	}
 
-	in := make([]appintel.Domain, 0, len(domains))
+	in := make([]app.IntelDomain, 0, len(domains))
 	for _, d := range domains {
-		in = append(in, appintel.Domain{Name: d.Name})
+		in = append(in, app.IntelDomain{Name: d.Name})
 	}
 
 	records, err := a.inner.Run(ctx, in)

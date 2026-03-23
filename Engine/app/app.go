@@ -4,6 +4,7 @@
 package app
 
 import (
+	"context"
 	"time"
 
 	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/DNS"
@@ -16,6 +17,25 @@ type GeneratedDomain struct {
 	RiskScore   float64
 	Confidence  string
 	GeneratedBy string
+}
+
+type IntelDomain struct {
+	Name string
+}
+
+type IntelRecord struct {
+	Domain    string
+	A         []string
+	AAAA      []string
+	CNAME     []string
+	NS        []string
+	MX        []string
+	TXT       []string
+	Providers []string
+}
+
+type DNSIntelService interface {
+	Run(ctx context.Context, domains []IntelDomain) ([]IntelRecord, error)
 }
 
 func DNSConfig(cfg Config) dns.Config {
@@ -55,8 +75,9 @@ func GenerateDomains(path string) ([]GeneratedDomain, error) {
 	return out, nil
 }
 
-func NewDNSIntelService(dnsTimeoutMS int64) *intel.DNSIntelService {
-	return intel.NewDefaultDNSIntelService(1, DNSIntelLookupTimeout(dnsTimeoutMS))
+func NewDNSIntelService(dnsTimeoutMS int64) DNSIntelService {
+	svc := intel.NewDefaultDNSIntelService(1, DNSIntelLookupTimeout(dnsTimeoutMS))
+	return intelServiceAdapter{inner: svc}
 }
 
 func DNSIntelLookupTimeout(dnsTimeoutMS int64) time.Duration {
@@ -71,4 +92,42 @@ func DNSIntelLookupTimeout(dnsTimeoutMS int64) time.Duration {
 		return 8 * time.Second
 	}
 	return timeout
+}
+
+type intelServiceAdapter struct {
+	inner *intel.DNSIntelService
+}
+
+func (a intelServiceAdapter) Run(ctx context.Context, domains []IntelDomain) ([]IntelRecord, error) {
+	if a.inner == nil {
+		return nil, nil
+	}
+
+	in := make([]intel.Domain, 0, len(domains))
+	for _, domain := range domains {
+		in = append(in, intel.Domain{Name: domain.Name})
+	}
+
+	records, err := a.inner.Run(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return mapIntelRecords(records), nil
+}
+
+func mapIntelRecords(records []intel.Record) []IntelRecord {
+	out := make([]IntelRecord, 0, len(records))
+	for _, rec := range records {
+		out = append(out, IntelRecord{
+			Domain:    rec.Domain,
+			A:         rec.A,
+			AAAA:      rec.AAAA,
+			CNAME:     rec.CNAME,
+			NS:        rec.NS,
+			MX:        rec.MX,
+			TXT:       rec.TXT,
+			Providers: rec.Providers,
+		})
+	}
+	return out
 }
