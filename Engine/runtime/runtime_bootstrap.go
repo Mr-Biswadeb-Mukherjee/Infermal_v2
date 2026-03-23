@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-package engine
+package runtime
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"sync/atomic"
 	"time"
-
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
 )
 
 const maxModuleErrorLogs = 25
@@ -22,22 +20,25 @@ type runtimeLogs struct {
 }
 
 type appRuntime struct {
-	cfg     Config
-	paths   Paths
-	started time.Time
-	cache   CacheStore
-	limiter RateLimiter
-	workers WorkerPoolFactory
-	cds     CooldownFactory
-	adapt   AdaptiveFactory
-	writers WriterFactory
-	startup Startup
-	logs    runtimeLogs
-	logErr  moduleErrorLogger
+	cfg         Config
+	paths       Paths
+	started     time.Time
+	cache       CacheStore
+	limiter     RateLimiter
+	initLimiter LimiterInitFunc
+	workers     WorkerPoolFactory
+	cds         CooldownFactory
+	adapt       AdaptiveFactory
+	writers     WriterFactory
+	modules     ModuleFactory
+	startup     Startup
+	printLine   func(args ...any)
+	logs        runtimeLogs
+	logErr      moduleErrorLogger
 }
 
 type appModules struct {
-	resolver dnsResolver
+	resolver DNSResolver
 	intel    *intelPipeline
 }
 
@@ -47,16 +48,19 @@ func newAppRuntime(deps Dependencies) (*appRuntime, error) {
 	}
 
 	rt := &appRuntime{
-		cfg:     deps.Config,
-		paths:   deps.Paths,
-		started: deps.Startup.Start("Starting Infermal_v2 Engine"),
-		cache:   deps.Cache,
-		limiter: deps.Limiter,
-		workers: deps.WorkerPools,
-		cds:     deps.Cooldowns,
-		adapt:   deps.Adaptive,
-		writers: deps.Writers,
-		startup: deps.Startup,
+		cfg:         deps.Config,
+		paths:       deps.Paths,
+		started:     deps.Startup.Start("Starting Infermal_v2 Engine"),
+		cache:       deps.Cache,
+		limiter:     deps.Limiter,
+		initLimiter: deps.InitLimiter,
+		workers:     deps.WorkerPools,
+		cds:         deps.Cooldowns,
+		adapt:       deps.Adaptive,
+		writers:     deps.Writers,
+		modules:     deps.Modules,
+		startup:     deps.Startup,
+		printLine:   deps.PrintLine,
 		logs: runtimeLogs{
 			app:         deps.Logs.App,
 			dns:         deps.Logs.DNS,
@@ -77,6 +81,8 @@ func validateDependencies(deps Dependencies) error {
 		return errors.New("app cache dependency is required")
 	case deps.Limiter == nil:
 		return errors.New("app limiter dependency is required")
+	case deps.InitLimiter == nil:
+		return errors.New("app limiter init dependency is required")
 	case deps.WorkerPools == nil:
 		return errors.New("app worker pool factory is required")
 	case deps.Cooldowns == nil:
@@ -85,6 +91,8 @@ func validateDependencies(deps Dependencies) error {
 		return errors.New("app adaptive factory is required")
 	case deps.Writers == nil:
 		return errors.New("app writer factory is required")
+	case deps.Modules == nil:
+		return errors.New("app module factory is required")
 	case deps.Paths.KeywordsCSV == "":
 		return errors.New("keywords path is required")
 	case deps.Paths.DNSIntelOutput == "" || deps.Paths.GeneratedOutput == "":
@@ -128,7 +136,7 @@ func (rt *appRuntime) finishRun(total, resolved int64) {
 
 func (rt *appRuntime) initRateLimiter(total int64, workers int) {
 	initialRate := seedRateLimit(rt.cfg.RateLimit, total, workers)
-	rt.limiter.Init(rt.cache, time.Second, initialRate, rt.logs.rateLimiter)
+	rt.initLimiter(rt.cache, time.Second, initialRate, rt.logs.rateLimiter)
 }
 
 func (rt *appRuntime) newModules(
@@ -139,7 +147,7 @@ func (rt *appRuntime) newModules(
 	intelPipe, err := newIntelPipeline(
 		ctx,
 		rt.cache,
-		rt.cfg.DNSTimeoutMS,
+		rt.modules.NewDNSIntelService(rt.cfg.DNSTimeoutMS),
 		rt.writers,
 		rt.paths,
 		generated,
@@ -151,17 +159,16 @@ func (rt *appRuntime) newModules(
 	}
 
 	return &appModules{
-		resolver: newReconResolver(rt.cfg, rt.logs.dns),
+		resolver: rt.modules.NewResolver(rt.cfg, rt.logs.dns),
 		intel:    intelPipe,
 	}, nil
 }
 
-func newReconResolver(cfg Config, dnsLog ModuleLogger) dnsResolver {
-	return app.NewResolver(cfg, dnsLog)
-}
-
-func loadGeneratedDomains(path string) ([]string, map[string]generatedDomainMeta, error) {
-	scored, err := app.GenerateDomains(path)
+func loadGeneratedDomains(
+	path string,
+	modules ModuleFactory,
+) ([]string, map[string]generatedDomainMeta, error) {
+	scored, err := modules.GenerateDomains(path)
 	if err != nil {
 		return nil, nil, err
 	}

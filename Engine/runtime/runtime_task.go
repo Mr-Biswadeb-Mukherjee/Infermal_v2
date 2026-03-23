@@ -1,22 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-package engine
+package runtime
 
 import (
 	"context"
 	"time"
 )
 
-type dnsResolver interface {
-	Resolve(ctx context.Context, domain string) (bool, error)
-}
-
 type moduleErrorLogger func(module, scope string, err error)
 
 func makeDomainTask(
 	domain string,
-	resolver dnsResolver,
+	resolver DNSResolver,
 	cache CacheStore,
 	cdm CooldownManager,
 	limiter RateLimiter,
@@ -118,7 +114,7 @@ func waitForRateLimit(
 func resolveDomain(
 	ctx context.Context,
 	domain string,
-	resolver dnsResolver,
+	resolver DNSResolver,
 	tuner *runtimeTuner,
 ) (bool, error, time.Duration) {
 	resolveTimeout := tuner.resolveTimeout()

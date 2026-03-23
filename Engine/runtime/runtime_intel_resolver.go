@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-package engine
+package runtime
 
 import (
 	"math"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/intel"
 )
 
 type intelNDJSONRecord struct {
@@ -37,7 +35,7 @@ type generatedDomainNDJSONRecord struct {
 	GeneratedBy string  `json:"generated_by"`
 }
 
-func intelRecordToNDJSON(r intel.Record) intelNDJSONRecord {
+func intelRecordToNDJSON(r IntelRecord) intelNDJSONRecord {
 	return intelNDJSONRecord{
 		Domain:       r.Domain,
 		A:            r.A,

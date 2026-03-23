@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-package engine
+package runtime
 
 import (
 	"context"
 	"errors"
 	"strings"
 	"time"
-
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/intel"
 )
 
 const (
@@ -30,7 +27,7 @@ type intelQueueStore interface {
 
 type intelPipeline struct {
 	store        intelQueueStore
-	service      *intel.DNSIntelService
+	service      DNSIntelService
 	writer       RecordWriter
 	domainWriter RecordWriter
 	generated    map[string]generatedDomainMeta
@@ -45,13 +42,17 @@ type intelPipeline struct {
 func newIntelPipeline(
 	parentCtx context.Context,
 	store intelQueueStore,
-	dnsTimeoutMS int64,
+	service DNSIntelService,
 	writerFactory WriterFactory,
 	paths Paths,
 	generated map[string]generatedDomainMeta,
 	logErr moduleErrorLogger,
 	onDone func(),
 ) (*intelPipeline, error) {
+	if service == nil {
+		return nil, errors.New("dns intel service is required")
+	}
+
 	writer, domainWriter, err := newPipelineWriters(writerFactory, paths, logErr)
 	if err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func newIntelPipeline(
 	ctx, cancel := context.WithCancel(parentCtx)
 	p := &intelPipeline{
 		store:        store,
-		service:      app.NewDNSIntelService(dnsTimeoutMS),
+		service:      service,
 		writer:       writer,
 		domainWriter: domainWriter,
 		generated:    generated,
@@ -186,7 +187,7 @@ func (p *intelPipeline) processDomain(domain string) {
 	runCtx, cancel := context.WithTimeout(p.ctx, 8*time.Second)
 	defer cancel()
 
-	records, err := p.service.Run(runCtx, []intel.Domain{{Name: domain}})
+	records, err := p.service.Run(runCtx, []IntelDomain{{Name: domain}})
 	if err != nil {
 		p.logErr("dns-intel-run", domain, err)
 		p.WriteResolvedFallback(domain)

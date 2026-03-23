@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
-package engine
+package runtime
 
 import (
 	"context"
 	"errors"
 	"strings"
 	"time"
-
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
 )
 
 func closeWriters(writers ...RecordWriter) error {
@@ -37,7 +35,17 @@ func (p *intelPipeline) generatedMeta(domain string) generatedDomainMeta {
 }
 
 func intelLookupTimeout(dnsTimeoutMS int64) time.Duration {
-	return app.DNSIntelLookupTimeout(dnsTimeoutMS)
+	if dnsTimeoutMS <= 0 {
+		return 3 * time.Second
+	}
+	timeout := time.Duration(dnsTimeoutMS) * 6 * time.Millisecond
+	if timeout < 2*time.Second {
+		return 2 * time.Second
+	}
+	if timeout > 8*time.Second {
+		return 8 * time.Second
+	}
+	return timeout
 }
 
 func newDNSIntelWriter(
