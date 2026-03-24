@@ -47,7 +47,7 @@ jobs:
           [ -z "$files" ] || { echo "::error::Unformatted files"; echo "$files"; exit 1; }
       - name: Go vet
         run: go vet ./...
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84
         with:
           version: latest
           args: --timeout=5m --color=always
@@ -61,7 +61,7 @@ jobs:
           sarif_file: gosec.sarif
           category: gosec
       - name: gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Architecture check
@@ -220,7 +220,7 @@ jobs:
           pattern: infermal-*
           path: dist/
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe  
         with:
           draft: true
           generate_release_notes: true
