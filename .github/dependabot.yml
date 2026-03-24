@@ -1,0 +1,33 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║        INFERMAL_v2  ·  Dependabot Configuration                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+# Place at: .github/dependabot.yml
+
+version: 2
+
+updates:
+  # Go modules (repository root)
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "deps(go)"
+    open-pull-requests-limit: 5
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions)"
+    open-pull-requests-limit: 5

@@ -32,7 +32,7 @@ func TestResolveSystemFallback(t *testing.T) {
 	if !ok {
 		t.Fatal("expected system resolver fallback success")
 	}
-	if !mSystem.called {
+	if mSystem.Calls() == 0 {
 		t.Fatal("system resolver was not called")
 	}
 }
@@ -53,7 +53,7 @@ func TestResolveSystemOnly(t *testing.T) {
 	if !ok {
 		t.Fatal("expected system-only resolution success")
 	}
-	if !mSystem.called {
+	if mSystem.Calls() == 0 {
 		t.Fatal("system resolver not called")
 	}
 }

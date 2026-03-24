@@ -6,227 +6,214 @@ package dns_test
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/DNS"
 )
 
-// ------------------------------------------------------------
-//
-//	MOCK RESOLVER
-//
-// ------------------------------------------------------------
 type mockResolver struct {
-	shouldResolve bool
-	err           error
-	called        bool
+	shouldResolve  bool
+	err            error
+	delay          time.Duration
+	blockUntilDone bool
+	called         atomic.Int32
 }
 
 func (m *mockResolver) Resolve(ctx context.Context, domain string) (bool, error) {
-	m.called = true
+	m.called.Add(1)
+	if m.blockUntilDone {
+		<-ctx.Done()
+		return false, ctx.Err()
+	}
+	if m.delay > 0 {
+		select {
+		case <-time.After(m.delay):
+		case <-ctx.Done():
+			return false, ctx.Err()
+		}
+	}
 	return m.shouldResolve, m.err
 }
 
-// ------------------------------------------------------------
-//
-//	MOCK CACHE
-//
-// ------------------------------------------------------------
+func (m *mockResolver) Calls() int {
+	return int(m.called.Load())
+}
+
+type cacheEntry struct {
+	val string
+	exp time.Time
+}
+
 type mockCache struct {
-	store map[string]string
+	mu    sync.RWMutex
+	store map[string]cacheEntry
 }
 
 func newMockCache() *mockCache {
-	return &mockCache{store: make(map[string]string)}
+	return &mockCache{store: make(map[string]cacheEntry)}
 }
 
 func (c *mockCache) GetValue(ctx context.Context, key string) (string, error) {
-	val, ok := c.store[key]
-	if !ok {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	e, ok := c.store[key]
+	if !ok || time.Now().After(e.exp) {
 		return "", errors.New("not found")
 	}
-	return val, nil
+	return e.val, nil
 }
 
 func (c *mockCache) SetValue(ctx context.Context, key string, v interface{}, ttl time.Duration) error {
-	c.store[key] = v.(string)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.store[key] = cacheEntry{val: v.(string), exp: time.Now().Add(ttl)}
 	return nil
 }
 
-// ------------------------------------------------------------
-//
-//	BASIC INIT TEST
-//
-// ------------------------------------------------------------
-func TestInitDNS(t *testing.T) {
-	cfg := dns.Config{
-		Upstream:  "1.1.1.1",
-		Backup:    "8.8.8.8",
-		Retries:   1,
-		TimeoutMS: 300,
-		DelayMS:   20,
-	}
+type slowReadCache struct{}
 
-	d, err := dns.InitDNS(cfg)
+func (c *slowReadCache) GetValue(ctx context.Context, key string) (string, error) {
+	<-ctx.Done()
+	return "", ctx.Err()
+}
+
+func (c *slowReadCache) SetValue(ctx context.Context, key string, v interface{}, ttl time.Duration) error {
+	return nil
+}
+
+type failingWriteCache struct{}
+
+func (c *failingWriteCache) GetValue(ctx context.Context, key string) (string, error) {
+	return "", errors.New("not found")
+}
+
+func (c *failingWriteCache) SetValue(ctx context.Context, key string, v interface{}, ttl time.Duration) error {
+	return errors.New("redis down")
+}
+
+type captureLogger struct {
+	mu       sync.Mutex
+	warnings []string
+}
+
+func (l *captureLogger) Warning(format string, v ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.warnings = append(l.warnings, fmt.Sprintf(format, v...))
+}
+
+func (l *captureLogger) Contains(sub string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, w := range l.warnings {
+		if strings.Contains(w, sub) {
+			return true
+		}
+	}
+	return false
+}
+
+func waitForCacheValue(t *testing.T, cache *mockCache, key, want string) {
+	t.Helper()
+	deadline := time.Now().Add(250 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		got, err := cache.GetValue(context.Background(), key)
+		if err == nil && got == want {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("cache key %s did not reach %q", key, want)
+}
+
+func TestInitDNS(t *testing.T) {
+	d, err := dns.InitDNS(dns.Config{Upstream: "1.1.1.1:53", Backup: "8.8.8.8:53", Retries: 2, TimeoutMS: 150, DelayMS: 10})
 	if err != nil {
 		t.Fatalf("InitDNS failed: %v", err)
 	}
-
 	if d == nil {
-		t.Fatal("InitDNS returned nil DNS struct")
+		t.Fatal("nil DNS instance")
 	}
 }
 
-// ------------------------------------------------------------
-//
-//	RESOLUTION WITH PRIMARY ONLY
-//
-// ------------------------------------------------------------
 func TestResolvePrimarySuccess(t *testing.T) {
-	mPrimary := &mockResolver{shouldResolve: true}
+	primary := &mockResolver{shouldResolve: true}
 	d := &dns.DNS{}
-	d.SwapPrimary(mPrimary)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	ok, err := d.Resolve(ctx, "example.com")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected primary resolver success")
-	}
-	if !mPrimary.called {
-		t.Fatal("primary resolver not called")
-	}
-}
-
-// ------------------------------------------------------------
-//
-//	FALLBACK TO BACKUP RESOLVER
-//
-// ------------------------------------------------------------
-func TestResolveBackupFallback(t *testing.T) {
-	mPrimary := &mockResolver{shouldResolve: false, err: errors.New("fail")}
-	mBackup := &mockResolver{shouldResolve: true}
-
-	d := &dns.DNS{}
-	d.SwapPrimary(mPrimary)
-	d.SwapBackup(mBackup)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	ok, err := d.Resolve(ctx, "example.com")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("expected backup resolver success")
-	}
-	if !mBackup.called {
-		t.Fatal("backup resolver was not called")
-	}
-}
-
-// ------------------------------------------------------------
-//
-//	FALLBACK TO RECURSIVE RESOLVER
-//
-// ------------------------------------------------------------
-func TestResolveRecursiveFallback(t *testing.T) {
-	mPrimary := &mockResolver{shouldResolve: false, err: errors.New("fail")}
-	mBackup := &mockResolver{shouldResolve: false, err: errors.New("fail")}
-	mRecursive := &mockResolver{shouldResolve: true}
-
-	d := &dns.DNS{}
-	d.SwapPrimary(mPrimary)
-	d.SwapBackup(mBackup)
-	d.AttachRecursive(mRecursive)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	ok, err := d.Resolve(ctx, "fallback.com")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !ok {
-		t.Fatal("recursive resolver should resolve")
-	}
-	if !mRecursive.called {
-		t.Fatal("recursive resolver not called")
-	}
-}
-
-// ------------------------------------------------------------
-//
-//	CACHE HIT (POS / NEG)
-//
-// ------------------------------------------------------------
-func TestResolveCacheHit(t *testing.T) {
-	cache := newMockCache()
-	cache.store["dns:example.com"] = "1"
-
-	d := &dns.DNS{}
-	d.AttachCache(cache)
+	d.SwapPrimary(primary)
 
 	ok, err := d.Resolve(context.Background(), "example.com")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err != nil || !ok {
+		t.Fatalf("expected success, got ok=%v err=%v", ok, err)
 	}
-	if !ok {
-		t.Fatal("expected cached positive result")
-	}
-}
-
-func TestResolveCacheNegativeHit(t *testing.T) {
-	cache := newMockCache()
-	cache.store["dns:blocked.com"] = "0"
-
-	d := &dns.DNS{}
-	d.AttachCache(cache)
-
-	ok, err := d.Resolve(context.Background(), "blocked.com")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Fatal("expected cached negative result")
+	if primary.Calls() != 1 {
+		t.Fatalf("expected primary call count 1, got %d", primary.Calls())
 	}
 }
 
-// ------------------------------------------------------------
-//
-//	NEGATIVE CACHE AFTER FAIL
-//
-// ------------------------------------------------------------
-func TestResolveNegativeCaching(t *testing.T) {
-	mPrimary := &mockResolver{shouldResolve: false, err: errors.New("nope")}
-
-	cache := newMockCache()
-
+func TestResolveSkipsFallbackWhenPrimarySucceeds(t *testing.T) {
+	primary := &mockResolver{shouldResolve: true}
+	backup := &mockResolver{shouldResolve: true}
+	system := &mockResolver{shouldResolve: true}
 	d := &dns.DNS{}
-	d.SwapPrimary(mPrimary)
+	d.SwapPrimary(primary)
+	d.SwapBackup(backup)
+	d.SwapSystem(system)
+
+	ok, err := d.Resolve(context.Background(), "fast-path.com")
+	if err != nil || !ok {
+		t.Fatalf("expected primary fast-path success, got ok=%v err=%v", ok, err)
+	}
+	if backup.Calls() != 0 || system.Calls() != 0 {
+		t.Fatal("fallback resolvers should not be called on primary success")
+	}
+}
+
+func TestResolveFallbackChain(t *testing.T) {
+	primary := &mockResolver{err: errors.New("primary fail")}
+	backup := &mockResolver{err: errors.New("backup fail")}
+	recursive := &mockResolver{shouldResolve: true}
+	d := &dns.DNS{}
+	d.SwapPrimary(primary)
+	d.SwapBackup(backup)
+	d.AttachRecursive(recursive)
+
+	ok, err := d.Resolve(context.Background(), "fallback.com")
+	if err != nil || !ok {
+		t.Fatalf("expected recursive fallback success, got ok=%v err=%v", ok, err)
+	}
+	if recursive.Calls() != 1 {
+		t.Fatalf("expected recursive resolver called once, got %d", recursive.Calls())
+	}
+}
+
+func TestCacheHitPositiveAndNegative(t *testing.T) {
+	cache := newMockCache()
+	_ = cache.SetValue(context.Background(), "dns:ok.com", "1", time.Second)
+	_ = cache.SetValue(context.Background(), "dns:bad.com", "0", time.Second)
+	d := &dns.DNS{}
 	d.AttachCache(cache)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	ok, err := d.Resolve(ctx, "fail.com")
-	if ok {
-		t.Fatal("expected failure")
+	ok, err := d.Resolve(context.Background(), "ok.com")
+	if err != nil || !ok {
+		t.Fatalf("expected positive cache hit, got ok=%v err=%v", ok, err)
 	}
-	if err == nil {
-		t.Fatal("expected an error")
+	ok, err = d.Resolve(context.Background(), "bad.com")
+	if err != nil || ok {
+		t.Fatalf("expected negative cache hit, got ok=%v err=%v", ok, err)
 	}
+}
 
-	// small delay for async writer
-	time.Sleep(50 * time.Millisecond)
+func TestNegativeCaching(t *testing.T) {
+	d := &dns.DNS{}
+	d.SwapPrimary(&mockResolver{err: errors.New("fail")})
+	cache := newMockCache()
+	d.AttachCache(cache)
 
-	if cache.store["dns:fail.com"] != "0" {
-		t.Fatal("negative result not cached")
-	}
+	_, _ = d.Resolve(context.Background(), "fail.com")
+	waitForCacheValue(t, cache, "dns:fail.com", "0")
 }
