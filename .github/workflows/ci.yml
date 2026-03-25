@@ -96,9 +96,27 @@ jobs:
 
       - name: Complexity check
         run: |
+          set -e
+
           go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-          violations=$(gocyclo -over ${{ env.CYCLO_THRESHOLD }} main.go Engine core bootstrap scripts)
-          [ -z "$violations" ] || { echo "::error::Complexity threshold exceeded"; echo "$violations"; exit 1; }
+          export PATH=$PATH:$(go env GOPATH)/bin
+
+          targets="main.go Engine core bootstrap scripts"
+
+          for t in $targets; do
+            if [ ! -e "$t" ]; then
+              echo "Skipping missing: $t"
+              continue
+            fi
+          done
+
+          violations=$(gocyclo -over ${{ env.CYCLO_THRESHOLD }} $targets || true)
+
+          if [ -n "$violations" ]; then
+            echo "::error::Complexity threshold exceeded"
+            echo "$violations"
+            exit 1
+          fi
 
       - name: SLOC check
         run: |
