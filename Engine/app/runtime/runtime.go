@@ -15,13 +15,12 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 	defer rt.Close()
 
-	domains, generatedMeta, err := loadGeneratedDomains(rt.paths.KeywordsCSV, rt.modules)
+	total, err := loadGeneratedDomains(parentCtx, rt.paths.KeywordsCSV, rt.modules, rt.cache)
 	if err != nil {
 		rt.logs.app.Alert("domain generation failed: %v", err)
 		return fmt.Errorf("error processing Keywords.csv: %w", err)
 	}
 
-	total := int64(len(domains))
 	if total == 0 {
 		rt.startup.Stop()
 		if rt.printLine != nil {
@@ -31,13 +30,13 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 
 	runner := newScanRunner(rt, total)
-	modules, err := rt.newModules(parentCtx, generatedMeta, runner.onIntelDone())
+	modules, err := rt.newModules(parentCtx, runner.onIntelDone())
 	if err != nil {
 		rt.logs.app.Alert("intel pipeline init failed: %v", err)
 		return fmt.Errorf("error starting dns intel pipeline: %w", err)
 	}
 
-	resolved := runner.run(parentCtx, domains, modules)
+	resolved := runner.run(parentCtx, modules)
 	rt.finishRun(total, resolved)
 	rt.logs.app.Info("run completed generated=%d resolved=%d", total, resolved)
 	return nil

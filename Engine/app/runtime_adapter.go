@@ -16,25 +16,25 @@ type appResolverBuilder func(
 	Resolve(ctx context.Context, domain string) (bool, error)
 }
 
-type appDomainGenerator func(path string) ([]GeneratedDomain, error)
+type appDomainStreamer func(path string, sink func(GeneratedDomain) error) error
 
 type appIntelServiceBuilder func(dnsTimeoutMS int64) DNSIntelService
 
 type moduleFactory struct {
-	newResolver     appResolverBuilder
-	generateDomains appDomainGenerator
-	newDNSIntelSVC  appIntelServiceBuilder
+	newResolver    appResolverBuilder
+	streamDomains  appDomainStreamer
+	newDNSIntelSVC appIntelServiceBuilder
 }
 
 func newModuleFactory(
 	resolver appResolverBuilder,
-	generator appDomainGenerator,
+	streamer appDomainStreamer,
 	intelSVC appIntelServiceBuilder,
 ) runtime.ModuleFactory {
 	return moduleFactory{
-		newResolver:     resolver,
-		generateDomains: generator,
-		newDNSIntelSVC:  intelSVC,
+		newResolver:    resolver,
+		streamDomains:  streamer,
+		newDNSIntelSVC: intelSVC,
 	}
 }
 
@@ -48,22 +48,21 @@ func (m moduleFactory) NewResolver(cfg runtime.Config, dnsLog runtime.ModuleLogg
 	return m.newResolver(appCfg, toAppLogger(dnsLog, nil))
 }
 
-func (m moduleFactory) GenerateDomains(path string) ([]runtime.GeneratedDomain, error) {
-	items, err := m.generateDomains(path)
-	if err != nil {
-		return nil, err
+func (m moduleFactory) StreamGeneratedDomains(
+	path string,
+	sink runtime.GeneratedDomainSink,
+) error {
+	if m.streamDomains == nil {
+		return nil
 	}
-
-	out := make([]runtime.GeneratedDomain, 0, len(items))
-	for _, item := range items {
-		out = append(out, runtime.GeneratedDomain{
+	return m.streamDomains(path, func(item GeneratedDomain) error {
+		return sink(runtime.GeneratedDomain{
 			Domain:      item.Domain,
 			RiskScore:   item.RiskScore,
 			Confidence:  item.Confidence,
 			GeneratedBy: item.GeneratedBy,
 		})
-	}
-	return out, nil
+	})
 }
 
 func (m moduleFactory) NewDNSIntelService(dnsTimeoutMS int64) runtime.DNSIntelService {

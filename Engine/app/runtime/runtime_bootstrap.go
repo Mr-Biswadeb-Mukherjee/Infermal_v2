@@ -151,7 +151,6 @@ func (rt *appRuntime) initRateLimiter(total int64, workers int) {
 
 func (rt *appRuntime) newModules(
 	ctx context.Context,
-	generated map[string]generatedDomainMeta,
 	onIntelDone func(),
 ) (*appModules, error) {
 	intelPipe, err := newIntelPipeline(
@@ -160,7 +159,6 @@ func (rt *appRuntime) newModules(
 		rt.modules.NewDNSIntelService(rt.cfg.DNSTimeoutMS),
 		rt.writers,
 		rt.paths,
-		generated,
 		rt.logErr,
 		onIntelDone,
 	)
@@ -175,13 +173,14 @@ func (rt *appRuntime) newModules(
 }
 
 func loadGeneratedDomains(
+	ctx context.Context,
 	path string,
 	modules ModuleFactory,
-) ([]string, map[string]generatedDomainMeta, error) {
-	scored, err := modules.GenerateDomains(path)
+	store CacheStore,
+) (int64, error) {
+	total, err := streamGeneratedDomainsToRedis(ctx, path, modules, store)
 	if err != nil {
-		return nil, nil, err
+		return 0, err
 	}
-	domains, meta := makeGeneratedDomainIndex(scored)
-	return domains, meta, nil
+	return total, nil
 }

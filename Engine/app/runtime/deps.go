@@ -184,6 +184,8 @@ type GeneratedDomain struct {
 	GeneratedBy string
 }
 
+type GeneratedDomainSink func(domain GeneratedDomain) error
+
 type IntelDomain struct {
 	Name string
 }
@@ -205,6 +207,6 @@ type DNSIntelService interface {
 
 type ModuleFactory interface {
 	NewResolver(cfg Config, dnsLog ModuleLogger) DNSResolver
-	GenerateDomains(path string) ([]GeneratedDomain, error)
+	StreamGeneratedDomains(path string, sink GeneratedDomainSink) error
 	NewDNSIntelService(dnsTimeoutMS int64) DNSIntelService
 }

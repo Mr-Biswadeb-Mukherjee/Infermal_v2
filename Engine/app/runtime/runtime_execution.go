@@ -50,14 +50,14 @@ func (sr *scanRunner) onIntelDone() func() {
 	}
 }
 
-func (sr *scanRunner) run(ctx context.Context, domains []string, modules *appModules) int64 {
+func (sr *scanRunner) run(ctx context.Context, modules *appModules) int64 {
 	sr.prepare()
 	cancel := sr.startAdaptiveControl(ctx)
 	defer cancel()
 
 	sr.rt.startup.Stop()
 	sr.progress.Start()
-	sr.processDomains(domains, modules)
+	sr.processDomains(ctx, modules)
 	sr.shutdown(modules)
 	return atomic.LoadInt64(&sr.resolved)
 }
@@ -94,50 +94,22 @@ func (sr *scanRunner) counters() runtimeCounters {
 	}
 }
 
-func newRuntimeWorkerPool(
-	cfg Config,
-	cache CacheStore,
-	factory WorkerPoolFactory,
-	workers int,
-	tuner *runtimeTuner,
-	active *int64,
-) WorkerPool {
-	timeout := resolveWorkerTimeout(tuner)
-	opts := &WorkerPoolOptions{
-		Timeout:         timeout,
-		MaxRetries:      cfg.MaxRetries,
-		AutoScale:       cfg.AutoScale,
-		MinWorkers:      1,
-		NonBlockingLogs: true,
-		OnTaskStart:     activeStart(active),
-		OnTaskFinish:    activeFinish(active),
-	}
-	return factory.NewWorkerPool(opts, workers, cache)
-}
-
-func resolveWorkerTimeout(tuner *runtimeTuner) time.Duration {
-	timeout := tuner.resolveTimeout() * 4
-	if timeout < 12*time.Second {
-		return 12 * time.Second
-	}
-	return timeout
-}
-
-func activeStart(active *int64) func(int64) {
-	return func(int64) {
-		atomic.AddInt64(active, 1)
-	}
-}
-
-func activeFinish(active *int64) func(int64, TaskResult) {
-	return func(int64, TaskResult) {
-		atomic.AddInt64(active, -1)
-	}
-}
-
-func (sr *scanRunner) processDomains(domains []string, modules *appModules) {
+func (sr *scanRunner) processDomains(ctx context.Context, modules *appModules) {
 	var wg sync.WaitGroup
-	for _, domain := range domains {
+
+	for pulled := int64(0); pulled < sr.total; {
+		domain, ok, err := popGeneratedDomain(ctx, sr.rt.cache)
+		if err != nil {
+			if ctx.Err() != nil {
+				break
+			}
+			sr.rt.logErr("domain-queue-pop", generatedDomainQueueKey, err)
+			continue
+		}
+		if !ok || domain == "" {
+			continue
+		}
+		pulled++
 		sr.submitDomain(domain, modules, &wg)
 	}
 	wg.Wait()

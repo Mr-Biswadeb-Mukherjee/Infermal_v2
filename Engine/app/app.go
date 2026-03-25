@@ -121,7 +121,7 @@ func newRuntimeModuleFactory() runtime.ModuleFactory {
 		} {
 			return NewResolver(cfg, dnsLog)
 		},
-		GenerateDomains,
+		StreamGeneratedDomains,
 		NewDNSIntelService,
 	)
 }
@@ -156,6 +156,20 @@ func GenerateDomains(path string) ([]GeneratedDomain, error) {
 		})
 	}
 	return out, nil
+}
+
+func StreamGeneratedDomains(path string, sink func(GeneratedDomain) error) error {
+	if sink == nil {
+		return nil
+	}
+	return recon.StreamScoredDomains(path, func(item recon.GeneratedDomain) error {
+		return sink(GeneratedDomain{
+			Domain:      item.Domain,
+			RiskScore:   item.RiskScore,
+			Confidence:  item.Confidence,
+			GeneratedBy: item.GeneratedBy,
+		})
+	})
 }
 
 func NewDNSIntelService(dnsTimeoutMS int64) DNSIntelService {

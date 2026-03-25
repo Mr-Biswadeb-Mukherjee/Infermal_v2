@@ -23,6 +23,7 @@ type intelQueueStore interface {
 	RPush(ctx context.Context, key string, values ...string) error
 	BLPop(ctx context.Context, timeout time.Duration, key string) (string, bool, error)
 	Expire(ctx context.Context, key string, ttl time.Duration) error
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error)
 }
 
 type intelPipeline struct {
@@ -31,7 +32,6 @@ type intelPipeline struct {
 	writer          RecordWriter
 	generatedWriter RecordWriter
 	resolvedWriter  RecordWriter
-	generated       map[string]generatedDomainMeta
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -46,7 +46,6 @@ func newIntelPipeline(
 	service DNSIntelService,
 	writerFactory WriterFactory,
 	paths Paths,
-	generated map[string]generatedDomainMeta,
 	logErr moduleErrorLogger,
 	onDone func(),
 ) (*intelPipeline, error) {
@@ -70,7 +69,6 @@ func newIntelPipeline(
 		writer:          writer,
 		generatedWriter: generatedWriter,
 		resolvedWriter:  resolvedWriter,
-		generated:       generated,
 		ctx:             ctx,
 		cancel:          cancel,
 		done:            make(chan error, 1),

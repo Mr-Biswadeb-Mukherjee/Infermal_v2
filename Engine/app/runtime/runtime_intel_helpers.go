@@ -6,7 +6,6 @@ package runtime
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 )
 
@@ -24,11 +23,14 @@ func closeWriters(writers ...RecordWriter) error {
 }
 
 func (p *intelPipeline) generatedMeta(domain string) generatedDomainMeta {
-	if p.generated == nil {
+	if p == nil {
 		return defaultGeneratedMeta()
 	}
-	meta, ok := p.generated[strings.ToLower(strings.TrimSpace(domain))]
-	if !ok {
+	meta, err := loadGeneratedMeta(p.ctx, p.store, domain)
+	if err != nil {
+		if p.logErr != nil {
+			p.logErr("generated-meta-read", domain, err)
+		}
 		return defaultGeneratedMeta()
 	}
 	return normalizeGeneratedMeta(meta)
