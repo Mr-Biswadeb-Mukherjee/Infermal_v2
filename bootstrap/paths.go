@@ -19,6 +19,7 @@ type runtimePaths struct {
 	redisConf       string
 	dnsIntelOutput  string
 	generatedOutput string
+	resolvedOutput  string
 }
 
 var (
@@ -38,7 +39,8 @@ func loadRuntimePaths() runtimePaths {
 			settingConf:     filepath.Join(repo, "Setting", "setting.conf"),
 			redisConf:       filepath.Join(repo, "Setting", "redis.yaml"),
 			dnsIntelOutput:  filepath.Join(repo, "Output", "DNS_Intel.ndjson"),
-			generatedOutput: filepath.Join(repo, "Output", "Generated_Domains.ndjson"),
+			generatedOutput: filepath.Join(repo, "Output", "Generated_Domain.ndjson"),
+			resolvedOutput:  filepath.Join(repo, "Output", "Resolved_Domain.ndjson"),
 		}
 	})
 	return pathsSet

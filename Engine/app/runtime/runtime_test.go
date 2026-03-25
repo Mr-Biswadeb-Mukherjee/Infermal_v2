@@ -41,10 +41,16 @@ func TestGeneratedDomainRecordHelpersNormalizeValues(t *testing.T) {
 	if unresolved.Score != 0.46 || unresolved.Confidence != "low" || unresolved.GeneratedBy != "unknown" {
 		t.Fatalf("unexpected unresolved record: %#v", unresolved)
 	}
+	if unresolved.Resolution != "unresolved" {
+		t.Fatalf("unexpected unresolved status: %q", unresolved.Resolution)
+	}
 
 	resolved := resolvedDomainRecord(" MAIL.EXAMPLE.COM ", meta)
 	if resolved.Domain != "mail.example.com" {
 		t.Fatalf("unexpected resolved domain: %q", resolved.Domain)
+	}
+	if resolved.Resolution != "resolved" {
+		t.Fatalf("unexpected resolved status: %q", resolved.Resolution)
 	}
 }
 

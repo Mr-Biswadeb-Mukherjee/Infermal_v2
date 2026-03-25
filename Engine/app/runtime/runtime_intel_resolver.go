@@ -33,6 +33,7 @@ type generatedDomainNDJSONRecord struct {
 	Score       float64 `json:"score"`
 	Confidence  string  `json:"confidence"`
 	GeneratedBy string  `json:"generated_by"`
+	Resolution  string  `json:"resolution"`
 }
 
 func intelRecordToNDJSON(r IntelRecord) intelNDJSONRecord {
@@ -94,21 +95,27 @@ func normalizeGeneratedMeta(meta generatedDomainMeta) generatedDomainMeta {
 }
 
 func unresolvedDomainRecord(domain string, meta generatedDomainMeta) generatedDomainNDJSONRecord {
-	normalized := normalizeGeneratedMeta(meta)
-	return generatedDomainNDJSONRecord{
-		Domain:      strings.ToLower(strings.TrimSpace(domain)),
-		Score:       normalized.RiskScore,
-		Confidence:  normalized.Confidence,
-		GeneratedBy: normalized.GeneratedBy,
-	}
+	return generatedDomainRecord(domain, meta, "unresolved")
 }
 
 func resolvedDomainRecord(domain string, meta generatedDomainMeta) generatedDomainNDJSONRecord {
+	return generatedDomainRecord(domain, meta, "resolved")
+}
+
+func generatedDomainRecord(
+	domain string,
+	meta generatedDomainMeta,
+	resolution string,
+) generatedDomainNDJSONRecord {
 	normalized := normalizeGeneratedMeta(meta)
+	if strings.TrimSpace(resolution) == "" {
+		resolution = "unresolved"
+	}
 	return generatedDomainNDJSONRecord{
 		Domain:      strings.ToLower(strings.TrimSpace(domain)),
 		Score:       normalized.RiskScore,
 		Confidence:  normalized.Confidence,
 		GeneratedBy: normalized.GeneratedBy,
+		Resolution:  strings.ToLower(strings.TrimSpace(resolution)),
 	}
 }

@@ -64,6 +64,14 @@ func newGeneratedDomainWriter(
 	return newNDJSONWriter(paths.GeneratedOutput, writers, "generated-domain-writer", logErr)
 }
 
+func newResolvedDomainWriter(
+	paths Paths,
+	writers WriterFactory,
+	logErr moduleErrorLogger,
+) (RecordWriter, error) {
+	return newNDJSONWriter(paths.ResolvedOutput, writers, "resolved-domain-writer", logErr)
+}
+
 func newNDJSONWriter(
 	path string,
 	writers WriterFactory,

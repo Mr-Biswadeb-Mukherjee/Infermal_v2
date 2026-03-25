@@ -96,6 +96,7 @@ func toRuntimePaths(paths Paths) runtime.Paths {
 		KeywordsCSV:     paths.KeywordsCSV,
 		DNSIntelOutput:  paths.DNSIntelOutput,
 		GeneratedOutput: paths.GeneratedOutput,
+		ResolvedOutput:  paths.ResolvedOutput,
 	}
 }
 

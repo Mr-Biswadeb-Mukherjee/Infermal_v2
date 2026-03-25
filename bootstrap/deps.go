@@ -64,6 +64,7 @@ func BuildEngineDependencies() (app.Dependencies, error) {
 			KeywordsCSV:     paths.keywordsCSV,
 			DNSIntelOutput:  paths.dnsIntelOutput,
 			GeneratedOutput: paths.generatedOutput,
+			ResolvedOutput:  paths.resolvedOutput,
 		},
 		Startup:     newStartupAdapter(),
 		Logs:        logs,

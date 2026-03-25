@@ -106,7 +106,9 @@ func hasAppLoggers(deps Dependencies) bool {
 }
 
 func hasOutputPaths(deps Dependencies) bool {
-	return deps.Paths.DNSIntelOutput != "" && deps.Paths.GeneratedOutput != ""
+	return deps.Paths.DNSIntelOutput != "" &&
+		deps.Paths.GeneratedOutput != "" &&
+		deps.Paths.ResolvedOutput != ""
 }
 
 func newModuleErrorLogger(appLog ModuleLogger) moduleErrorLogger {
@@ -138,6 +140,7 @@ func (logs runtimeLogs) Close() error {
 func (rt *appRuntime) finishRun(total, resolved int64) {
 	rt.startup.Finish(rt.started, total, resolved)
 	fmt.Printf("✔ Generated domains written to %s\n", rt.paths.GeneratedOutput)
+	fmt.Printf("✔ Resolved domains written to %s\n", rt.paths.ResolvedOutput)
 	fmt.Printf("✔ DNS intel written to %s\n", rt.paths.DNSIntelOutput)
 }
 

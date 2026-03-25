@@ -26,11 +26,12 @@ type intelQueueStore interface {
 }
 
 type intelPipeline struct {
-	store        intelQueueStore
-	service      DNSIntelService
-	writer       RecordWriter
-	domainWriter RecordWriter
-	generated    map[string]generatedDomainMeta
+	store           intelQueueStore
+	service         DNSIntelService
+	writer          RecordWriter
+	generatedWriter RecordWriter
+	resolvedWriter  RecordWriter
+	generated       map[string]generatedDomainMeta
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -53,27 +54,28 @@ func newIntelPipeline(
 		return nil, errors.New("dns intel service is required")
 	}
 
-	writer, domainWriter, err := newPipelineWriters(writerFactory, paths, logErr)
+	writer, generatedWriter, resolvedWriter, err := newPipelineWriters(writerFactory, paths, logErr)
 	if err != nil {
 		return nil, err
 	}
 	if err := resetIntelQueue(store); err != nil {
-		_ = closeWriters(writer, domainWriter)
+		_ = closeWriters(writer, generatedWriter, resolvedWriter)
 		return nil, err
 	}
 
 	ctx, cancel := context.WithCancel(parentCtx)
 	p := &intelPipeline{
-		store:        store,
-		service:      service,
-		writer:       writer,
-		domainWriter: domainWriter,
-		generated:    generated,
-		ctx:          ctx,
-		cancel:       cancel,
-		done:         make(chan error, 1),
-		logErr:       logErr,
-		onDone:       onDone,
+		store:           store,
+		service:         service,
+		writer:          writer,
+		generatedWriter: generatedWriter,
+		resolvedWriter:  resolvedWriter,
+		generated:       generated,
+		ctx:             ctx,
+		cancel:          cancel,
+		done:            make(chan error, 1),
+		logErr:          logErr,
+		onDone:          onDone,
 	}
 	go p.consumeLoop()
 	return p, nil
@@ -83,17 +85,22 @@ func newPipelineWriters(
 	writerFactory WriterFactory,
 	paths Paths,
 	logErr moduleErrorLogger,
-) (RecordWriter, RecordWriter, error) {
+) (RecordWriter, RecordWriter, RecordWriter, error) {
 	writer, err := newDNSIntelWriter(paths, writerFactory, logErr)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	domainWriter, err := newGeneratedDomainWriter(paths, writerFactory, logErr)
+	generatedWriter, err := newGeneratedDomainWriter(paths, writerFactory, logErr)
 	if err != nil {
 		_ = writer.Close()
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return writer, domainWriter, nil
+	resolvedWriter, err := newResolvedDomainWriter(paths, writerFactory, logErr)
+	if err != nil {
+		_ = closeWriters(writer, generatedWriter)
+		return nil, nil, nil, err
+	}
+	return writer, generatedWriter, resolvedWriter, nil
 }
 
 func (p *intelPipeline) EnqueueResolved(domain string) bool {
@@ -113,16 +120,22 @@ func (p *intelPipeline) WriteUnresolved(domain string) bool {
 	if domain == "" {
 		return false
 	}
-	p.domainWriter.WriteRecord(unresolvedDomainRecord(domain, p.generatedMeta(domain)))
+	p.generatedWriter.WriteRecord(unresolvedDomainRecord(domain, p.generatedMeta(domain)))
 	return true
 }
 
 func (p *intelPipeline) WriteResolvedFallback(domain string) bool {
+	return p.writeResolved(domain)
+}
+
+func (p *intelPipeline) writeResolved(domain string) bool {
 	domain = strings.TrimSpace(domain)
 	if domain == "" {
 		return false
 	}
-	p.domainWriter.WriteRecord(resolvedDomainRecord(domain, p.generatedMeta(domain)))
+	record := resolvedDomainRecord(domain, p.generatedMeta(domain))
+	p.resolvedWriter.WriteRecord(record)
+	p.generatedWriter.WriteRecord(record)
 	return true
 }
 
@@ -138,7 +151,7 @@ func (p *intelPipeline) StopAndWait() error {
 	consumeErr := <-p.done
 	p.cancel()
 
-	closeErr := closeWriters(p.writer, p.domainWriter)
+	closeErr := closeWriters(p.writer, p.generatedWriter, p.resolvedWriter)
 	cleanupErr := resetIntelQueue(p.store)
 	return errors.Join(stopErr, consumeErr, closeErr, cleanupErr)
 }
@@ -200,6 +213,10 @@ func (p *intelPipeline) processDomain(domain string) {
 
 	for _, rec := range records {
 		p.writer.WriteRecord(intelRecordToNDJSON(rec))
-		p.domainWriter.WriteRecord(resolvedDomainRecord(rec.Domain, p.generatedMeta(rec.Domain)))
+		recordDomain := strings.TrimSpace(rec.Domain)
+		if recordDomain == "" {
+			recordDomain = domain
+		}
+		p.writeResolved(recordDomain)
 	}
 }

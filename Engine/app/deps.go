@@ -24,6 +24,7 @@ type Paths struct {
 	KeywordsCSV     string
 	DNSIntelOutput  string
 	GeneratedOutput string
+	ResolvedOutput  string
 }
 
 type Dependencies struct {
