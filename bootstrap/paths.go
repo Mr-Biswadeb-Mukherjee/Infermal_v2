@@ -6,7 +6,7 @@ package bootstrap
 import (
 	"os"
 	"path/filepath"
-	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -29,7 +29,7 @@ var (
 
 func loadRuntimePaths() runtimePaths {
 	pathsOnce.Do(func() {
-		repo := detectRepoRoot()
+		repo := detectRuntimeRoot()
 		engineDir := filepath.Join(repo, "Engine")
 		pathsSet = runtimePaths{
 			repo:            repo,
@@ -46,25 +46,41 @@ func loadRuntimePaths() runtimePaths {
 	return pathsSet
 }
 
-func detectRepoRoot() string {
-	if root := findGoModuleRoot(callerDir()); root != "" {
+func detectRuntimeRoot() string {
+	if dir := executableDir(); dir != "" {
+		if !isTemporaryBuildDir(dir) {
+			return dir
+		}
+	}
+	if root := moduleRootFromWorkingDir(); root != "" {
 		return root
 	}
-	wd, err := os.Getwd()
-	if err == nil {
-		if root := findGoModuleRoot(wd); root != "" {
-			return root
-		}
+	if dir := executableDir(); dir != "" {
+		return dir
 	}
 	return "."
 }
 
-func callerDir() string {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
+func moduleRootFromWorkingDir() string {
+	wd, err := os.Getwd()
+	if err != nil {
 		return ""
 	}
-	return filepath.Dir(file)
+	return findGoModuleRoot(wd)
+}
+
+func executableDir() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(filepath.Clean(exePath))
+}
+
+func isTemporaryBuildDir(dir string) bool {
+	tmp := filepath.Clean(os.TempDir())
+	clean := filepath.Clean(dir)
+	return strings.Contains(clean, filepath.Join(tmp, "go-build"))
 }
 
 func findGoModuleRoot(start string) string {

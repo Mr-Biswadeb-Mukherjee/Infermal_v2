@@ -6,31 +6,46 @@ package mutation
 import (
 	"os"
 	"path/filepath"
-	"runtime"
+	"strings"
 )
 
 const defaultSettingsPath = "Setting/setting.conf"
 
 func resolveSettingsPath() string {
-	if root := findModuleRoot(callerSettingsDir()); root != "" {
+	if dir := executableDir(); dir != "" {
+		if !isTemporaryBuildDir(dir) {
+			return filepath.Join(dir, defaultSettingsPath)
+		}
+	}
+	if root := findModuleRoot(workingDirectory()); root != "" {
 		return filepath.Join(root, defaultSettingsPath)
 	}
-
-	wd, err := os.Getwd()
-	if err == nil {
-		if root := findModuleRoot(wd); root != "" {
-			return filepath.Join(root, defaultSettingsPath)
-		}
+	if dir := executableDir(); dir != "" {
+		return filepath.Join(dir, defaultSettingsPath)
 	}
 	return defaultSettingsPath
 }
 
-func callerSettingsDir() string {
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
+func workingDirectory() string {
+	wd, err := os.Getwd()
+	if err != nil {
 		return ""
 	}
-	return filepath.Dir(file)
+	return wd
+}
+
+func executableDir() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(filepath.Clean(exePath))
+}
+
+func isTemporaryBuildDir(dir string) bool {
+	tmp := filepath.Clean(os.TempDir())
+	clean := filepath.Clean(dir)
+	return strings.Contains(clean, filepath.Join(tmp, "go-build"))
 }
 
 func findModuleRoot(start string) string {

@@ -21,6 +21,9 @@ func (cooldownFactoryAdapter) New() app.CooldownManager {
 
 func BuildEngineDependencies() (app.Dependencies, error) {
 	paths := loadRuntimePaths()
+	if err := ensureRuntimeAssets(paths); err != nil {
+		return app.Dependencies{}, err
+	}
 	if err := prepareRuntimeEnvironment(paths); err != nil {
 		return app.Dependencies{}, err
 	}
