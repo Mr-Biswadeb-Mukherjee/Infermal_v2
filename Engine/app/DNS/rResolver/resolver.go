@@ -7,26 +7,16 @@
 package rresolver
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
 	mdns "github.com/miekg/dns"
 )
-
-// Simple recursive DNS resolver
-// - Listens on UDP and TCP
-// - Performs iterative resolution starting from root servers
-// - Handles basic CNAME chasing
-// - Includes simple in-memory cache (TTL-respecting)
-
-var rootServers []string // loaded from root.conf at init
 
 // Resolver holds server configuration and cache.
 type Resolver struct {
@@ -238,189 +228,4 @@ func (r *Resolver) tryQuery(ctx context.Context, server string, q *mdns.Msg) (*m
 		return in, server, nil
 	}
 	return in, server, err
-}
-
-// extractRecords filters answers matching qname and qtype (or all types if qtype==ANY)
-func extractRecords(m *mdns.Msg, qname string, qtype uint16) []mdns.RR {
-	out := make([]mdns.RR, 0)
-	for _, rr := range m.Answer {
-		if strings.EqualFold(strings.TrimSuffix(rr.Header().Name, "."), strings.TrimSuffix(qname, ".")) {
-			if qtype == mdns.TypeANY || rr.Header().Rrtype == qtype {
-				out = append(out, rr)
-			}
-		}
-	}
-	return out
-}
-
-// extractNameservers returns NS names from Authority section
-func extractNameservers(m *mdns.Msg) []string {
-	var out []string
-	for _, rr := range m.Ns {
-		if ns, ok := rr.(*mdns.NS); ok {
-			out = append(out, strings.TrimSuffix(ns.Ns, "."))
-		}
-	}
-	return out
-}
-
-// resolveServersFromMsg looks into Additional for A/AAAA glue records matching NS names
-func resolveServersFromMsg(m *mdns.Msg, nsNames []string) []string {
-	addrs := make(map[string]struct{})
-	for _, rr := range m.Extra {
-		switch v := rr.(type) {
-		case *mdns.A:
-			name := strings.TrimSuffix(v.Hdr.Name, ".")
-			for _, n := range nsNames {
-				if strings.EqualFold(name, n) {
-					addrs[net.JoinHostPort(v.A.String(), "53")] = struct{}{}
-				}
-			}
-		case *mdns.AAAA:
-			name := strings.TrimSuffix(v.Hdr.Name, ".")
-			for _, n := range nsNames {
-				if strings.EqualFold(name, n) {
-					addrs[net.JoinHostPort(v.AAAA.String(), "53")] = struct{}{}
-				}
-			}
-		}
-	}
-	out := make([]string, 0, len(addrs))
-	for k := range addrs {
-		out = append(out, k)
-	}
-	return out
-}
-
-func dnsFqdn(name string) string {
-	if strings.HasSuffix(name, ".") {
-		return name
-	}
-	return name + "."
-}
-
-// ----------------- simple cache -----------------
-
-// LoadRootHints parses a BIND-style root hints file (root.hints) and extracts A/AAAA records.
-// It populates r.rootServers with addresses in the form "ip:53".
-func (r *Resolver) LoadRootHints(path string) error {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	zp := mdns.NewZoneParser(bytes.NewReader(data), "", path)
-	records := make([]string, 0)
-	seen := make(map[string]struct{})
-
-	for {
-		rr, ok := zp.Next()
-		if !ok {
-			break
-		}
-
-		switch v := rr.(type) {
-		case *mdns.A:
-			ip := v.A.String()
-			addr := net.JoinHostPort(ip, "53")
-			if _, ok := seen[addr]; !ok {
-				seen[addr] = struct{}{}
-				records = append(records, addr)
-			}
-
-		case *mdns.AAAA:
-			ip := v.AAAA.String()
-			addr := net.JoinHostPort(ip, "53")
-			if _, ok := seen[addr]; !ok {
-				seen[addr] = struct{}{}
-				records = append(records, addr)
-			}
-		}
-	}
-
-	if len(records) == 0 {
-		return fmt.Errorf("no A/AAAA records found in root hints: %s", path)
-	}
-
-	r.rootServers = records
-	return nil
-}
-
-type cacheEntry struct {
-	rrs       []mdns.RR
-	expiresAt time.Time
-}
-
-type cache struct {
-	mu    sync.RWMutex
-	store map[string]cacheEntry // key: name|type
-}
-
-func newCache() *cache {
-	return &cache{store: make(map[string]cacheEntry)}
-}
-
-func keyFor(name string, qtype uint16) string {
-	return strings.ToLower(name) + "|" + fmt.Sprint(qtype)
-}
-
-func (c *cache) get(name string, qtype uint16) []mdns.RR {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	k := keyFor(name, qtype)
-	if e, ok := c.store[k]; ok {
-		if time.Now().Before(e.expiresAt) {
-			out := make([]mdns.RR, len(e.rrs))
-			copy(out, e.rrs)
-			return out
-		}
-		delete(c.store, k)
-	}
-	return nil
-}
-
-func ttlFromRR(rr mdns.RR) uint32 {
-	return rr.Header().Ttl
-}
-
-func (c *cache) set(name string, qtype uint16, rrs []mdns.RR) {
-	if len(rrs) == 0 {
-		return
-	}
-	minTTL := uint32(3600)
-	for _, r := range rrs {
-		t := ttlFromRR(r)
-		if t < minTTL {
-			minTTL = t
-		}
-	}
-	if minTTL == 0 {
-		minTTL = 30
-	}
-	exp := time.Now().Add(time.Duration(minTTL) * time.Second)
-	copyRRs := make([]mdns.RR, len(rrs))
-	copy(copyRRs, rrs)
-	c.mu.Lock()
-	c.store[keyFor(name, qtype)] = cacheEntry{rrs: copyRRs, expiresAt: exp}
-	c.mu.Unlock()
-}
-
-// ----------------- utility -----------------
-
-func ExampleRun() {
-	r := NewResolver(":5353")
-	go func() {
-		if err := r.Start(); err != nil {
-			panic(err)
-		}
-	}()
-
-	c := &mdns.Client{Net: "udp"}
-	m := new(mdns.Msg)
-	m.SetQuestion(dnsFqdn("example.com"), mdns.TypeA)
-	in, _, err := c.Exchange(m, "127.0.0.1:5353")
-	if err != nil {
-		fmt.Println("query failed:", err)
-	}
-	fmt.Println(in)
 }
