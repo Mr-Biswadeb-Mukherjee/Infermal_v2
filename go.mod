@@ -5,7 +5,7 @@ go 1.24.9
 require (
 	github.com/miekg/dns v1.1.68
 	github.com/redis/go-redis/v9 v9.17.0
-	github.com/schollz/progressbar/v3 v3.18.0
+	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/net v0.43.0
