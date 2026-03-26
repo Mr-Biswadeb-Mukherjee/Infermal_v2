@@ -28,6 +28,7 @@ type intelQueueStore interface {
 
 type intelPipeline struct {
 	store           intelQueueStore
+	generated       *generatedDomainSpool
 	service         DNSIntelService
 	writer          RecordWriter
 	generatedWriter RecordWriter
@@ -43,6 +44,7 @@ type intelPipeline struct {
 func newIntelPipeline(
 	parentCtx context.Context,
 	store intelQueueStore,
+	generated *generatedDomainSpool,
 	service DNSIntelService,
 	writerFactory WriterFactory,
 	paths Paths,
@@ -65,6 +67,7 @@ func newIntelPipeline(
 	ctx, cancel := context.WithCancel(parentCtx)
 	p := &intelPipeline{
 		store:           store,
+		generated:       generated,
 		service:         service,
 		writer:          writer,
 		generatedWriter: generatedWriter,

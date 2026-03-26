@@ -98,7 +98,7 @@ func (sr *scanRunner) processDomains(ctx context.Context, modules *appModules) {
 	var wg sync.WaitGroup
 
 	for pulled := int64(0); pulled < sr.total; {
-		domain, ok, err := popGeneratedDomain(ctx, sr.rt.cache)
+		domain, ok, err := popGeneratedDomain(ctx, sr.rt.cache, sr.rt.generated)
 		if err != nil {
 			if ctx.Err() != nil {
 				break

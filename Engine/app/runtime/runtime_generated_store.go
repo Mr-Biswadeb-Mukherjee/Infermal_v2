@@ -5,6 +5,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -14,9 +15,10 @@ const (
 	generatedDomainQueueKey = "dns:generated:queue"
 	generatedMetaKeyPrefix  = "meta:"
 
-	generatedMetaTTL     = 48 * time.Hour
-	generatedQueueWait   = 1 * time.Second
-	generatedStoreIOTime = 400 * time.Millisecond
+	generatedMetaTTL       = 48 * time.Hour
+	generatedQueueWait     = 1 * time.Second
+	generatedStoreIOTime   = 400 * time.Millisecond
+	generatedBatchLoadTime = 1500 * time.Millisecond
 )
 
 const storeGeneratedDomainScript = `
@@ -33,25 +35,53 @@ const readGeneratedMetaScript = `
 return redis.call("HMGET", KEYS[1], "risk_score", "confidence", "generated_by")
 `
 
-func streamGeneratedDomainsToRedis(
+func streamGeneratedDomainsToSpool(
 	ctx context.Context,
 	path string,
 	modules ModuleFactory,
 	store CacheStore,
-) (int64, error) {
+	generatedOutput string,
+) (int64, *generatedDomainSpool, error) {
 	if err := resetGeneratedDomainQueue(store); err != nil {
-		return 0, err
+		return 0, nil, err
 	}
+	spool, err := newGeneratedDomainSpool(generatedOutput)
+	if err != nil {
+		return 0, nil, err
+	}
+	count, err := spool.ensureDataset(ctx, path, modules)
+	if err != nil {
+		_ = spool.Close()
+		return 0, nil, err
+	}
+	if count == 0 {
+		_ = spool.Close()
+		return 0, nil, nil
+	}
+	if err := spool.prepareRun(ctx); err != nil {
+		_ = spool.Close()
+		return 0, nil, err
+	}
+	if err := primeGeneratedQueue(ctx, store, spool); err != nil {
+		_ = spool.Close()
+		return 0, nil, err
+	}
+	return count, spool, nil
+}
 
-	var count int64
-	err := modules.StreamGeneratedDomains(path, func(item GeneratedDomain) error {
-		if err := storeGeneratedDomain(ctx, store, item); err != nil {
-			return err
-		}
-		count++
-		return nil
-	})
-	return count, err
+func primeGeneratedQueue(
+	ctx context.Context,
+	store CacheStore,
+	spool *generatedDomainSpool,
+) error {
+	loaded, err := loadNextGeneratedBatch(ctx, store, spool)
+	if err != nil {
+		return err
+	}
+	if loaded <= 0 {
+		return errors.New("generated spool is empty after ingest")
+	}
+	return nil
 }
 
 func storeGeneratedDomain(ctx context.Context, store CacheStore, item GeneratedDomain) error {
@@ -85,7 +115,26 @@ func resetGeneratedDomainQueue(store CacheStore) error {
 	return store.Delete(ctx, generatedDomainQueueKey)
 }
 
-func popGeneratedDomain(ctx context.Context, store CacheStore) (string, bool, error) {
+func popGeneratedDomain(
+	ctx context.Context,
+	store CacheStore,
+	spool *generatedDomainSpool,
+) (string, bool, error) {
+	value, ok, err := popGeneratedDomainFromCache(ctx, store)
+	if err != nil || ok {
+		return value, ok, err
+	}
+	if spool == nil {
+		return "", false, nil
+	}
+	loaded, err := loadNextGeneratedBatch(ctx, store, spool)
+	if err != nil || loaded == 0 {
+		return "", false, err
+	}
+	return popGeneratedDomainFromCache(ctx, store)
+}
+
+func popGeneratedDomainFromCache(ctx context.Context, store CacheStore) (string, bool, error) {
 	ioCtx, cancel := context.WithTimeout(ctx, generatedQueueWait+generatedStoreIOTime)
 	defer cancel()
 	value, ok, err := store.BLPop(ioCtx, generatedQueueWait, generatedDomainQueueKey)
@@ -95,39 +144,17 @@ func popGeneratedDomain(ctx context.Context, store CacheStore) (string, bool, er
 	return normalizeGeneratedDomainName(value), ok, nil
 }
 
-func loadGeneratedMeta(ctx context.Context, store intelQueueStore, domain string) (generatedDomainMeta, error) {
-	domain = normalizeGeneratedDomainName(domain)
-	if domain == "" {
-		return defaultGeneratedMeta(), nil
+func loadNextGeneratedBatch(
+	ctx context.Context,
+	store CacheStore,
+	spool *generatedDomainSpool,
+) (int, error) {
+	if spool == nil {
+		return 0, nil
 	}
-
-	ioCtx, cancel := context.WithTimeout(ctx, generatedStoreIOTime)
+	ioCtx, cancel := context.WithTimeout(ctx, generatedBatchLoadTime)
 	defer cancel()
-
-	raw, err := store.Eval(ioCtx, readGeneratedMetaScript, []string{generatedMetaKey(domain)})
-	if err != nil {
-		return defaultGeneratedMeta(), err
-	}
-	return parseGeneratedMeta(raw), nil
-}
-
-func parseGeneratedMeta(raw interface{}) generatedDomainMeta {
-	meta := defaultGeneratedMeta()
-	values, ok := raw.([]interface{})
-	if !ok || len(values) < 3 {
-		return meta
-	}
-
-	if score, ok := parseFloatString(stringValue(values[0])); ok {
-		meta.RiskScore = score
-	}
-	if value := stringValue(values[1]); value != "" {
-		meta.Confidence = value
-	}
-	if value := stringValue(values[2]); value != "" {
-		meta.GeneratedBy = value
-	}
-	return normalizeGeneratedMeta(meta)
+	return spool.loadNextBatch(ioCtx, store)
 }
 
 func generatedMetaKey(domain string) string {
@@ -140,23 +167,4 @@ func normalizeGeneratedDomainName(domain string) string {
 
 func formatRiskScore(score float64) string {
 	return strconv.FormatFloat(score, 'f', 2, 64)
-}
-
-func parseFloatString(value string) (float64, bool) {
-	parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
-	if err != nil {
-		return 0, false
-	}
-	return parsed, true
-}
-
-func stringValue(value interface{}) string {
-	switch typed := value.(type) {
-	case string:
-		return strings.TrimSpace(typed)
-	case []byte:
-		return strings.TrimSpace(string(typed))
-	default:
-		return ""
-	}
 }

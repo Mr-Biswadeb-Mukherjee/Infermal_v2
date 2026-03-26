@@ -15,11 +15,18 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 	defer rt.Close()
 
-	total, err := loadGeneratedDomains(parentCtx, rt.paths.KeywordsCSV, rt.modules, rt.cache)
+	total, spool, err := loadGeneratedDomains(
+		parentCtx,
+		rt.paths.GeneratedOutput,
+		rt.paths.KeywordsCSV,
+		rt.modules,
+		rt.cache,
+	)
 	if err != nil {
 		rt.logs.app.Alert("domain generation failed: %v", err)
 		return fmt.Errorf("error processing Keywords.csv: %w", err)
 	}
+	rt.generated = spool
 
 	if total == 0 {
 		rt.startup.Stop()

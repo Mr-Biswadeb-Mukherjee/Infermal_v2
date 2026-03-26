@@ -34,4 +34,4 @@ Logs/
 # Project specific exclusions
 Setting/setting.conf
 *.yaml
-
+Output

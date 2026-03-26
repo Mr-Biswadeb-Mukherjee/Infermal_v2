@@ -24,6 +24,7 @@ type appRuntime struct {
 	paths       Paths
 	started     time.Time
 	cache       CacheStore
+	generated   *generatedDomainSpool
 	limiter     RateLimiter
 	initLimiter LimiterInitFunc
 	workers     WorkerPoolFactory
@@ -130,7 +131,7 @@ func (rt *appRuntime) Close() error {
 	}
 
 	rt.startup.Stop()
-	return errors.Join(rt.cache.Close(), rt.logs.Close())
+	return errors.Join(rt.cache.Close(), closeGeneratedSpool(rt.generated), rt.logs.Close())
 }
 
 func (logs runtimeLogs) Close() error {
@@ -156,6 +157,7 @@ func (rt *appRuntime) newModules(
 	intelPipe, err := newIntelPipeline(
 		ctx,
 		rt.cache,
+		rt.generated,
 		rt.modules.NewDNSIntelService(rt.cfg.DNSTimeoutMS),
 		rt.writers,
 		rt.paths,
@@ -174,13 +176,21 @@ func (rt *appRuntime) newModules(
 
 func loadGeneratedDomains(
 	ctx context.Context,
+	generatedOutput string,
 	path string,
 	modules ModuleFactory,
 	store CacheStore,
-) (int64, error) {
-	total, err := streamGeneratedDomainsToRedis(ctx, path, modules, store)
+) (int64, *generatedDomainSpool, error) {
+	total, spool, err := streamGeneratedDomainsToSpool(ctx, path, modules, store, generatedOutput)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
-	return total, nil
+	return total, spool, nil
+}
+
+func closeGeneratedSpool(spool *generatedDomainSpool) error {
+	if spool == nil {
+		return nil
+	}
+	return spool.Close()
 }

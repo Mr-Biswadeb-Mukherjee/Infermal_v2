@@ -26,7 +26,7 @@ func (p *intelPipeline) generatedMeta(domain string) generatedDomainMeta {
 	if p == nil {
 		return defaultGeneratedMeta()
 	}
-	meta, err := loadGeneratedMeta(p.ctx, p.store, domain)
+	meta, err := loadGeneratedMeta(p.ctx, p.store, p.generated, domain)
 	if err != nil {
 		if p.logErr != nil {
 			p.logErr("generated-meta-read", domain, err)
