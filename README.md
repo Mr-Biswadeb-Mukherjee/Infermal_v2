@@ -146,7 +146,7 @@ All output is written as **newline-delimited JSON (NDJSON)** for streaming compa
 | `Output/DNS_Intel.ndjson` | A/AAAA/CNAME/NS/MX/TXT records, provider list, IST timestamp |
 | `Output/cluster.ndjson` | ASN/IP cluster correlation rows emitted when two or more domains share infrastructure |
 | `Output/Run_Metrics.ndjson` | Run-level duration, totals, QPS, and rate-limit telemetry snapshot |
-| `Output/QPS_History_<timestamp>.ndjson` | Time-series QPS and progress history sampled during execution |
+| `Output/Metrics_History_<timestamp>.ndjson` | Time-series QPS, CPU, RAM, and progress history sampled during execution |
 
 Output integrates directly with SIEM platforms, data pipelines, and visualization tooling.
 

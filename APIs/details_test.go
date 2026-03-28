@@ -72,14 +72,14 @@ func TestReadNDJSONTailReturnsLastRows(t *testing.T) {
 
 func TestLatestQPSHistoryPathSelectsNewestName(t *testing.T) {
 	root := t.TempDir()
-	writeTestFile(t, filepath.Join(root, "QPS_History_2026-03-28_01-00-00.ndjson"), []string{`{}`})
-	writeTestFile(t, filepath.Join(root, "QPS_History_2026-03-28_03-00-00.ndjson"), []string{`{}`})
+	writeTestFile(t, filepath.Join(root, "Metrics_History_2026-03-28_01-00-00.ndjson"), []string{`{}`})
+	writeTestFile(t, filepath.Join(root, "Metrics_History_2026-03-28_03-00-00.ndjson"), []string{`{}`})
 
 	path, err := latestQPSHistoryPath(root)
 	if err != nil {
 		t.Fatalf("latestQPSHistoryPath error: %v", err)
 	}
-	want := filepath.Join(root, "QPS_History_2026-03-28_03-00-00.ndjson")
+	want := filepath.Join(root, "Metrics_History_2026-03-28_03-00-00.ndjson")
 	if path != want {
 		t.Fatalf("path=%q want %q", path, want)
 	}

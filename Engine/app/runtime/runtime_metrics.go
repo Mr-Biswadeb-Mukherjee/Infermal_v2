@@ -6,9 +6,11 @@ package runtime
 import (
 	"math"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -34,6 +36,8 @@ type qpsHistoryRecord struct {
 	IntelDoneTotal int64   `json:"intel_done_total"`
 	ResolveQPS     float64 `json:"resolve_qps"`
 	IntelQPS       float64 `json:"intel_qps"`
+	CPUPercent     float64 `json:"cpu_percent"`
+	RAMMB          float64 `json:"ram_mb"`
 }
 
 type qpsHistoryWriter struct {
@@ -48,6 +52,7 @@ type qpsHistoryWriter struct {
 
 	completed *int64
 	intelDone *int64
+	cpu       *cpuSampler
 }
 
 func qpsHistoryOutputPath(runMetricsPath string, started time.Time) string {
@@ -57,7 +62,7 @@ func qpsHistoryOutputPath(runMetricsPath string, started time.Time) string {
 		dir = "."
 	}
 	stamp := started.In(istLocation).Format("2006-01-02_15-04-05")
-	return filepath.Join(dir, "QPS_History_"+stamp+".ndjson")
+	return filepath.Join(dir, "Metrics_History_"+stamp+".ndjson")
 }
 
 func (rt *appRuntime) writeRunMetrics(total, resolved int64, finishedAt time.Time) error {
@@ -127,6 +132,7 @@ func newQPSHistoryWriter(rt *appRuntime, completed, intelDone *int64) (*qpsHisto
 		lastInt:   loadCounter(intelDone),
 		completed: completed,
 		intelDone: intelDone,
+		cpu:       newCPUSampler(),
 	}, nil
 }
 
@@ -172,6 +178,8 @@ func (q *qpsHistoryWriter) writeSnapshot(now time.Time) {
 	completed := loadCounter(q.completed)
 	intelDone := loadCounter(q.intelDone)
 	window := now.Sub(q.lastAt).Seconds()
+	cpuPercent := q.cpu.Percent(now)
+	ramMB := processRAMMB()
 	record := qpsHistoryRecord{
 		TimestampUTC:   formatISTTimestamp(now),
 		ElapsedSeconds: roundTo2(now.Sub(q.start).Seconds()),
@@ -179,6 +187,8 @@ func (q *qpsHistoryWriter) writeSnapshot(now time.Time) {
 		IntelDoneTotal: intelDone,
 		ResolveQPS:     deltaQPS(completed-q.lastRes, window),
 		IntelQPS:       deltaQPS(intelDone-q.lastInt, window),
+		CPUPercent:     cpuPercent,
+		RAMMB:          ramMB,
 	}
 	q.writer.WriteRecord(record)
 	q.lastAt = now
@@ -198,6 +208,56 @@ func deltaQPS(delta int64, seconds float64) float64 {
 		return 0
 	}
 	return roundTo2(float64(delta) / seconds)
+}
+
+type cpuSampler struct {
+	lastAt  time.Time
+	lastCPU float64
+}
+
+func newCPUSampler() *cpuSampler {
+	now := time.Now()
+	return &cpuSampler{
+		lastAt:  now,
+		lastCPU: processCPUSeconds(),
+	}
+}
+
+func (s *cpuSampler) Percent(now time.Time) float64 {
+	if s == nil {
+		return 0
+	}
+	wallSeconds := now.Sub(s.lastAt).Seconds()
+	currentCPU := processCPUSeconds()
+	if wallSeconds <= 0 {
+		s.lastAt = now
+		s.lastCPU = currentCPU
+		return 0
+	}
+	used := currentCPU - s.lastCPU
+	s.lastAt = now
+	s.lastCPU = currentCPU
+	if used <= 0 {
+		return 0
+	}
+	return roundTo2((used / wallSeconds) * 100)
+}
+
+func processCPUSeconds() float64 {
+	var usage syscall.Rusage
+	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &usage); err != nil {
+		return 0
+	}
+	user := float64(usage.Utime.Sec) + float64(usage.Utime.Usec)/1_000_000
+	sys := float64(usage.Stime.Sec) + float64(usage.Stime.Usec)/1_000_000
+	return user + sys
+}
+
+func processRAMMB() float64 {
+	var stats runtime.MemStats
+	runtime.ReadMemStats(&stats)
+	const bytesPerMB = 1024 * 1024
+	return roundTo2(float64(stats.Alloc) / bytesPerMB)
 }
 
 func formatISTTimestamp(ts time.Time) string {

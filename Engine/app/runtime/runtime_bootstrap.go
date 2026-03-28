@@ -154,7 +154,7 @@ func (rt *appRuntime) finishRun(total, resolved int64) {
 	fmt.Printf("✔ DNS intel written to %s\n", rt.paths.DNSIntelOutput)
 	fmt.Printf("✔ Cluster intel written to %s\n", rt.paths.ClusterOutput)
 	fmt.Printf("✔ Run metrics written to %s\n", rt.paths.RunMetricsOutput)
-	fmt.Printf("✔ QPS history written to %s\n", rt.qpsHistory)
+	fmt.Printf("✔ Metrics history written to %s\n", rt.qpsHistory)
 }
 
 func (rt *appRuntime) initRateLimiter(total int64, workers int) {

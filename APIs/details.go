@@ -149,7 +149,7 @@ func (s *DetailsService) resolvePath(section string) (string, error) {
 }
 
 func latestQPSHistoryPath(outputDir string) (string, error) {
-	pattern := filepath.Join(outputDir, "QPS_History_*.ndjson")
+	pattern := filepath.Join(outputDir, "Metrics_History_*.ndjson")
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return "", fmt.Errorf("invalid qps history pattern: %w", err)

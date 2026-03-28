@@ -38,7 +38,7 @@ func TestRunDurationSecondsClampsNonPositiveWindow(t *testing.T) {
 func TestQPSHistoryOutputPathIncludesTimestampedName(t *testing.T) {
 	started := time.Date(2026, time.March, 26, 10, 10, 5, 0, time.UTC)
 	path := qpsHistoryOutputPath("/tmp/Run_Metrics.ndjson", started)
-	if !strings.Contains(path, "/tmp/QPS_History_2026-03-26_15-40-05.ndjson") {
+	if !strings.Contains(path, "/tmp/Metrics_History_2026-03-26_15-40-05.ndjson") {
 		t.Fatalf("unexpected qps history path: %s", path)
 	}
 }
@@ -46,7 +46,7 @@ func TestQPSHistoryOutputPathIncludesTimestampedName(t *testing.T) {
 func TestQPSHistoryOutputPathFallbackDir(t *testing.T) {
 	started := time.Date(2026, time.March, 26, 10, 10, 5, 0, time.UTC)
 	path := qpsHistoryOutputPath("Run_Metrics.ndjson", started)
-	if !strings.Contains(path, "QPS_History_2026-03-26_15-40-05.ndjson") {
+	if !strings.Contains(path, "Metrics_History_2026-03-26_15-40-05.ndjson") {
 		t.Fatalf("unexpected qps history file name: %s", path)
 	}
 }
@@ -75,7 +75,7 @@ func TestLoadCounterNil(t *testing.T) {
 func TestQPSHistoryOutputPathTrimsInput(t *testing.T) {
 	started := time.Date(2026, time.March, 26, 11, 30, 0, 0, time.UTC)
 	path := qpsHistoryOutputPath("  /tmp/Run_Metrics.ndjson  ", started)
-	if !strings.Contains(path, "/tmp/QPS_History_2026-03-26_17-00-00.ndjson") {
+	if !strings.Contains(path, "/tmp/Metrics_History_2026-03-26_17-00-00.ndjson") {
 		t.Fatalf("unexpected trimmed qps history path: %s", path)
 	}
 }

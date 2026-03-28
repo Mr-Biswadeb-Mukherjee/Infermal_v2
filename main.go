@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	apiAddr         = ":9090"
+	apiAddr         = "127.0.0.1:9090"
 	shutdownTimeout = 15 * time.Second
 )
 
