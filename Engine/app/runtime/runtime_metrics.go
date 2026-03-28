@@ -14,6 +14,8 @@ import (
 
 const qpsHistoryTick = time.Second
 
+var istLocation = mustLoadISTLocation()
+
 type runMetricsRecord struct {
 	TimestampUTC     string  `json:"timestamp_utc"`
 	DurationSeconds  float64 `json:"duration_seconds"`
@@ -54,7 +56,7 @@ func qpsHistoryOutputPath(runMetricsPath string, started time.Time) string {
 	if dir == "" || dir == "." {
 		dir = "."
 	}
-	stamp := started.UTC().Format("2006-01-02_15-04-05")
+	stamp := started.In(istLocation).Format("2006-01-02_15-04-05")
 	return filepath.Join(dir, "QPS_History_"+stamp+".ndjson")
 }
 
@@ -76,7 +78,7 @@ func buildRunMetricsRecord(
 ) runMetricsRecord {
 	durationSeconds := runDurationSeconds(startedAt, finishedAt)
 	return runMetricsRecord{
-		TimestampUTC:     finishedAt.UTC().Format(time.RFC3339),
+		TimestampUTC:     formatISTTimestamp(finishedAt),
 		DurationSeconds:  durationSeconds,
 		GeneratedTotal:   total,
 		ResolvedTotal:    resolved,
@@ -171,7 +173,7 @@ func (q *qpsHistoryWriter) writeSnapshot(now time.Time) {
 	intelDone := loadCounter(q.intelDone)
 	window := now.Sub(q.lastAt).Seconds()
 	record := qpsHistoryRecord{
-		TimestampUTC:   now.UTC().Format(time.RFC3339),
+		TimestampUTC:   formatISTTimestamp(now),
 		ElapsedSeconds: roundTo2(now.Sub(q.start).Seconds()),
 		CompletedTotal: completed,
 		IntelDoneTotal: intelDone,
@@ -196,4 +198,16 @@ func deltaQPS(delta int64, seconds float64) float64 {
 		return 0
 	}
 	return roundTo2(float64(delta) / seconds)
+}
+
+func formatISTTimestamp(ts time.Time) string {
+	return ts.In(istLocation).Format(time.RFC3339)
+}
+
+func mustLoadISTLocation() *time.Location {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err == nil {
+		return loc
+	}
+	return time.FixedZone("IST", 5*60*60+30*60)
 }

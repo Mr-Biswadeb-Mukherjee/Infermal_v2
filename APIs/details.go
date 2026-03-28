@@ -6,13 +6,10 @@ package apis
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -132,6 +129,9 @@ func (s *DetailsService) fetchFileSection(section string, limit int) map[string]
 
 func (s *DetailsService) resolvePath(section string) (string, error) {
 	base := s.outputDir
+	if raw, ok := strings.CutPrefix(section, "file:"); ok {
+		return resolveCustomDetailsFile(base, raw)
+	}
 	switch section {
 	case "generated":
 		return filepath.Join(base, "Generated_Domain.ndjson"), nil
@@ -162,6 +162,9 @@ func latestQPSHistoryPath(outputDir string) (string, error) {
 }
 
 func readNDJSONTail(path string, limit int) ([]map[string]any, error) {
+	if strings.EqualFold(filepath.Ext(path), ".json") {
+		return readJSONTail(path, limit)
+	}
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -207,79 +210,4 @@ func parseNDJSONLine(line string) (map[string]any, error) {
 		return nil, fmt.Errorf("invalid ndjson line: %w", err)
 	}
 	return record, nil
-}
-
-func parseDetailsQuery(r *http.Request) ([]string, int, error) {
-	sections, err := parseDetailsSections(r.URL.Query().Get("section"))
-	if err != nil {
-		return nil, 0, err
-	}
-	limitRaw, ok := extractDetailsLimitRaw(r)
-	if !ok {
-		return nil, 0, errors.New("limit query is required")
-	}
-	limit, err := parseDetailsLimit(limitRaw)
-	if err != nil {
-		return nil, 0, err
-	}
-	return sections, limit, nil
-}
-
-func extractDetailsLimitRaw(r *http.Request) (string, bool) {
-	if r == nil || r.URL == nil {
-		return "", false
-	}
-	value := strings.TrimSpace(r.URL.Query().Get("limit"))
-	if value != "" {
-		return value, true
-	}
-	raw := strings.TrimSpace(r.URL.RawQuery)
-	if raw == "" || strings.Contains(raw, "=") || strings.Contains(raw, "&") {
-		return "", false
-	}
-	return raw, true
-}
-
-func parseDetailsSections(raw string) ([]string, error) {
-	clean := strings.TrimSpace(raw)
-	if clean == "" || strings.EqualFold(clean, "all") {
-		return slices.Clone(detailSectionOrder), nil
-	}
-	items := strings.Split(clean, ",")
-	sections := make([]string, 0, len(items))
-	for _, item := range items {
-		section, ok := normalizeDetailsSection(item)
-		if !ok {
-			return nil, fmt.Errorf("unsupported details section: %s", strings.TrimSpace(item))
-		}
-		if slices.Contains(sections, section) {
-			continue
-		}
-		sections = append(sections, section)
-	}
-	if len(sections) == 0 {
-		return nil, errors.New("section query cannot be empty")
-	}
-	return sections, nil
-}
-
-func normalizeDetailsSection(value string) (string, bool) {
-	key := strings.ToLower(strings.TrimSpace(value))
-	section, ok := detailSectionAliases[key]
-	return section, ok
-}
-
-func parseDetailsLimit(raw string) (int, error) {
-	clean := strings.TrimSpace(raw)
-	if clean == "" {
-		return 0, errors.New("limit query is required")
-	}
-	value, err := strconv.Atoi(clean)
-	if err != nil {
-		return 0, fmt.Errorf("invalid limit value: %s", clean)
-	}
-	if value <= 0 {
-		return 0, errors.New("limit must be greater than zero")
-	}
-	return value, nil
 }

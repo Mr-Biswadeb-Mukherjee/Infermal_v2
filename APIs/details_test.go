@@ -126,6 +126,73 @@ func TestHandleDetailsReturnsRequestedSections(t *testing.T) {
 	}
 }
 
+func TestHandleDetailsReadsCustomNDJSONFile(t *testing.T) {
+	root := t.TempDir()
+	writeTestFile(t, filepath.Join(root, "Custom.ndjson"), []string{
+		`{"row":1}`,
+		`{"row":2}`,
+	})
+
+	manager := NewSessionManager(testRuntimeFactory)
+	server := &Server{sessions: manager, details: NewDetailsService(root)}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v3/details?file=Custom.ndjson&limit=1",
+		nil,
+	)
+	server.handleDetails(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status=%d want 200 body=%s", rec.Code, rec.Body.String())
+	}
+	body := decodeMap(t, rec.Body.Bytes())
+	details := toMap(t, body["details"])
+	fileDetails := toMap(t, details["file:Custom.ndjson"])
+	records := toSlice(t, fileDetails["records"])
+	if len(records) != 1 {
+		t.Fatalf("records len=%d want 1", len(records))
+	}
+	row := toMap(t, records[0])
+	if row["row"] != float64(2) {
+		t.Fatalf("unexpected row: %#v", row)
+	}
+}
+
+func TestHandleDetailsReadsCustomJSONFile(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "events.json")
+	payload := `[{"event":"a"},{"event":"b"}]`
+	if err := os.WriteFile(path, []byte(payload), 0o644); err != nil {
+		t.Fatalf("write file failed: %v", err)
+	}
+
+	manager := NewSessionManager(testRuntimeFactory)
+	server := &Server{sessions: manager, details: NewDetailsService(root)}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v3/details?file=events.json&limit=1",
+		nil,
+	)
+	server.handleDetails(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status=%d want 200 body=%s", rec.Code, rec.Body.String())
+	}
+	body := decodeMap(t, rec.Body.Bytes())
+	details := toMap(t, body["details"])
+	fileDetails := toMap(t, details["file:events.json"])
+	records := toSlice(t, fileDetails["records"])
+	if len(records) != 1 {
+		t.Fatalf("records len=%d want 1", len(records))
+	}
+	row := toMap(t, records[0])
+	if row["event"] != "b" {
+		t.Fatalf("unexpected row: %#v", row)
+	}
+}
+
 func TestRouteHandlersIncludeDetails(t *testing.T) {
 	server := &Server{}
 	handlers := server.routeHandlers()

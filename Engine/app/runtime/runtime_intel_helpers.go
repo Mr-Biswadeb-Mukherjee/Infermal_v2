@@ -177,7 +177,7 @@ func intelRecordToNDJSON(r IntelRecord) intelNDJSONRecord {
 		RegistrarWhoisServer: r.RegistrarWhoisServer,
 		UpdatedDate:          r.UpdatedDate,
 		CreationDate:         r.CreationDate,
-		TimestampUTC:         time.Now().UTC().Format(time.RFC3339),
+		TimestampUTC:         formatISTTimestamp(time.Now()),
 	}
 }
 

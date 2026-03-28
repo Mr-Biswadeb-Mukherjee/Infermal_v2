@@ -74,13 +74,13 @@ func (m *SessionManager) StartSession() (SessionInfo, error) {
 		return SessionInfo{}, ErrSessionRunning
 	}
 
-	now := m.now().UTC()
+	now := m.now().In(apiISTLocation)
 	ctx, cancel := context.WithCancel(context.Background())
 	rec := &sessionRecord{
 		info: SessionInfo{
 			ID:        newSessionID(now),
 			Status:    StatusStarting,
-			StartedAt: now.Format(time.RFC3339),
+			StartedAt: formatAPIISTTimestamp(now),
 		},
 		cancel: cancel,
 		done:   make(chan struct{}),
@@ -190,7 +190,7 @@ func (m *SessionManager) finishSession(rec *sessionRecord, status SessionStatus,
 	}
 
 	rec.info.Status = status
-	rec.info.EndedAt = m.now().UTC().Format(time.RFC3339)
+	rec.info.EndedAt = formatAPIISTTimestamp(m.now())
 	rec.info.Error = errText
 	m.last = rec.info
 	m.hasLast = true
@@ -223,5 +223,5 @@ func (s SessionStatus) IsTerminal() bool {
 }
 
 func newSessionID(now time.Time) string {
-	return fmt.Sprintf("sess-%d", now.UTC().UnixNano())
+	return fmt.Sprintf("sess-%d", now.UnixNano())
 }

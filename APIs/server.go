@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var apiISTLocation = loadAPIISTLocation()
+
 type Server struct {
 	sessions     *SessionManager
 	keys         APIKeyPair
@@ -111,7 +113,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		"version":     "v3",
 		"auth_header": s.apiKeyHeader,
 		"auth_mode":   "public_key",
-		"timestamp":   time.Now().UTC().Format(time.RFC3339),
+		"timestamp":   formatAPIISTTimestamp(time.Now()),
 		"listen_port": 9090,
 	})
 }
@@ -229,7 +231,7 @@ func writeSessionEvent(
 	}
 	record := map[string]any{
 		"type":          "session.status",
-		"timestamp_utc": time.Now().UTC().Format(time.RFC3339),
+		"timestamp_utc": formatAPIISTTimestamp(time.Now()),
 		"session":       info,
 	}
 	if err := encoder.Encode(record); err != nil {
@@ -249,4 +251,16 @@ func (s *Server) writeActiveConflict(w http.ResponseWriter, sourceErr error) {
 		"error":          sourceErr.Error(),
 		"active_session": active,
 	})
+}
+
+func formatAPIISTTimestamp(ts time.Time) string {
+	return ts.In(apiISTLocation).Format(time.RFC3339)
+}
+
+func loadAPIISTLocation() *time.Location {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err == nil {
+		return loc
+	}
+	return time.FixedZone("IST", 5*60*60+30*60)
 }

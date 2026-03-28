@@ -143,7 +143,8 @@ All output is written as **newline-delimited JSON (NDJSON)** for streaming compa
 |------|----------|
 | `Output/Generated_Domain.ndjson` | Generated domains with risk score, confidence, and source algorithm metadata |
 | `Output/Resolved_Domain.ndjson` | Final resolved domains that passed runtime resolution pipeline |
-| `Output/DNS_Intel.ndjson` | A/AAAA/CNAME/NS/MX/TXT records, provider list, UTC timestamp |
+| `Output/DNS_Intel.ndjson` | A/AAAA/CNAME/NS/MX/TXT records, provider list, IST timestamp |
+| `Output/cluster.ndjson` | ASN/IP cluster correlation rows emitted when two or more domains share infrastructure |
 | `Output/Run_Metrics.ndjson` | Run-level duration, totals, QPS, and rate-limit telemetry snapshot |
 | `Output/QPS_History_<timestamp>.ndjson` | Time-series QPS and progress history sampled during execution |
 
@@ -174,20 +175,20 @@ go mod tidy
 All runtime parameters are controlled via `Setting/setting.conf`. The file is auto-created with safe defaults on first run if absent.
 
 ```ini
-# DNS resolver endpoints
-upstream_dns    = 8.8.8.8:53
-backup_dns      = 1.1.1.1:53
-dns_timeout_ms  = 3000
-dns_retries     = 2
-
 # Worker and rate control
-rate_limit      = 0          # 0 = auto-seed based on domain count
+rate_limit      = auto
+rate_limit_ceiling = 160
+cooldown_after  = auto
+cooldown_duration = auto
 max_retries     = 3
-auto_scale      = true
-timeout_seconds = 0          # 0 = auto-seed
+autoscale       = false
+timeout_seconds = auto
 
-# Output
-log_level       = info
+# DNS resolver endpoints
+upstream_dns    = 9.9.9.9:53
+backup_dns      = 1.1.1.1:53
+dns_timeout_ms  = 500
+dns_retries     = 2
 ```
 
 Redis is configured separately via `Setting/redis.yaml`:
@@ -230,9 +231,9 @@ Trigger a scan lifecycle via API:
 BASE="http://localhost:9090"
 PUB_KEY="pubkey_ed25519 <token> Infermal_v2"
 
-curl -s -X POST "$BASE/api/v3/control/start" -H "X-API-Key: $PUB_KEY"
-curl -s "$BASE/api/v3/control/status"        -H "X-API-Key: $PUB_KEY"
-curl -s -X POST "$BASE/api/v3/control/stop"  -H "X-API-Key: $PUB_KEY"
+curl -s -X POST "$BASE/api/v3/start"         -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/status"                -H "X-API-Key: $PUB_KEY"
+curl -s -X POST "$BASE/api/v3/stop"          -H "X-API-Key: $PUB_KEY"
 ```
 
 ---
@@ -274,11 +275,11 @@ If the private key is deleted or replaced, a new public key is derived and previ
 | Endpoint | Method | Auth |
 |----------|--------|------|
 | `/healthz` | `GET` | No |
-| `/api/v3/control/start` | `POST` | Yes |
-| `/api/v3/control/stop` | `POST` | Yes |
-| `/api/v3/control/status` | `GET` | Yes |
-| `/api/v3/control/metrics` | `GET` | Yes |
-| `/api/v3/control/events.ndjson` | `GET` | Yes |
+| `/api/v3/start` | `POST` | Yes |
+| `/api/v3/stop` | `POST` | Yes |
+| `/api/v3/status` | `GET` | Yes |
+| `/api/v3/metrics` | `GET` | Yes |
+| `/api/v3/events.ndjson` | `GET` | Yes |
 | `/api/v3/details` | `GET` | Yes |
 
 ### Quick Test with curl
@@ -288,22 +289,26 @@ BASE="http://localhost:9090"
 PUB_KEY="pubkey_ed25519 <token> Infermal_v2"
 
 curl -s "$BASE/healthz"
-curl -s -X POST "$BASE/api/v3/control/start"  -H "X-API-Key: $PUB_KEY"
-curl -s "$BASE/api/v3/control/status"         -H "X-API-Key: $PUB_KEY"
-curl -s "$BASE/api/v3/control/metrics"        -H "X-API-Key: $PUB_KEY"
+curl -s -X POST "$BASE/api/v3/start"          -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/status"                 -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/metrics"                -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/events.ndjson"          -H "X-API-Key: $PUB_KEY"
 curl -s "$BASE/api/v3/details?section=session,metrics,generated&limit=20" -H "X-API-Key: $PUB_KEY"
-curl -s -X POST "$BASE/api/v3/control/stop"   -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/details?file=DNS_Intel.ndjson&limit=100" -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/details?file=events.json&limit=100" -H "X-API-Key: $PUB_KEY"
+curl -s -X POST "$BASE/api/v3/stop"           -H "X-API-Key: $PUB_KEY"
 ```
 
 `/api/v3/details` query params:
 
 - `section`: comma-separated sections (`session`, `metrics`, `generated`, `resolved`, `dns_intel`, `run_metrics`, `qps_history`) or `all`
-- `limit`: required positive integer from client (for example `50000`, `100000`) to control NDJSON rows returned per file-backed section
+- `file`: optional file name inside `Output/` with `.json` or `.ndjson` extension
+- `limit`: required positive integer from client (for example `50000`, `100000`) to control rows returned for file-backed sections
 
 Negative test:
 
 ```bash
-curl -i -X POST "$BASE/api/v3/control/start" -H "X-API-Key: invalid-key"
+curl -i -X POST "$BASE/api/v3/start" -H "X-API-Key: invalid-key"
 ```
 
 
@@ -327,9 +332,10 @@ curl -i -X POST "$BASE/api/v3/control/start" -H "X-API-Key: invalid-key"
 ```json
 {
   "domain": "g00gle.com",
-  "risk_score": 0.81,
+  "score": 0.81,
   "confidence": "high",
-  "generated_by": "bitsquatting,typo_squat"
+  "generated_by": "bitsquatting,typo_squat",
+  "resolution": "resolved"
 }
 ```
 
@@ -357,9 +363,11 @@ curl -i -X POST "$BASE/api/v3/control/start" -H "X-API-Key: invalid-key"
   "mx": [],
   "txt": ["v=spf1 include:mailgun.org ~all"],
   "providers": ["provider.net", "registrar.com"],
-  "timestamp": "2026-03-21T14:50:06Z"
+  "timestamp_utc": "2026-03-21T20:20:06+05:30"
 }
 ```
+
+All recorded event/output timestamps are emitted in Indian Standard Time (`Asia/Kolkata`, `+05:30`) using RFC3339 format.
 
 ---
 

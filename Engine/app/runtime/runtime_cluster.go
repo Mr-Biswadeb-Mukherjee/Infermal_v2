@@ -158,7 +158,7 @@ func buildClusterRecord(group *asnClusterGroup) clusterNDJSONRecord {
 		ASName:      group.ASName,
 		Domains:     domains,
 		ClusterSize: len(domains),
-		Timestamp:   time.Now().UTC().Format(time.RFC3339),
+		Timestamp:   formatISTTimestamp(time.Now()),
 	}
 }
 
