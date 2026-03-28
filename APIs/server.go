@@ -16,6 +16,7 @@ type Server struct {
 	sessions     *SessionManager
 	keys         APIKeyPair
 	apiKeyHeader string
+	details      *DetailsService
 }
 
 func NewRouter(
@@ -36,6 +37,7 @@ func NewRouter(
 		sessions:     sessions,
 		keys:         keys,
 		apiKeyHeader: contract.APIKeyHeader,
+		details:      NewDetailsService(defaultDetailsOutputDir),
 	}
 	mux, err := server.buildMux(contract)
 	if err != nil {
@@ -59,12 +61,13 @@ func (s *Server) buildMux(contract EndpointContract) (*http.ServeMux, error) {
 
 func (s *Server) routeHandlers() map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
-		"health":          s.handleHealth,
+		"health":  s.handleHealth,
 		"start":   s.handleStart,
 		"stop":    s.handleStop,
 		"status":  s.handleStatus,
 		"metrics": s.handleMetrics,
 		"events":  s.handleEvents,
+		"details": s.handleDetails,
 	}
 }
 
@@ -174,6 +177,23 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	if err := s.streamSessionEvents(w, r); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 	}
+}
+
+func (s *Server) handleDetails(w http.ResponseWriter, r *http.Request) {
+	sections, limit, err := parseDetailsQuery(r)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if s.details == nil {
+		writeError(w, http.StatusInternalServerError, "details service unavailable")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"requested_sections": sections,
+		"limit":              limit,
+		"details":            s.details.Fetch(sections, limit, s.sessions),
+	})
 }
 
 func (s *Server) streamSessionEvents(w http.ResponseWriter, r *http.Request) error {

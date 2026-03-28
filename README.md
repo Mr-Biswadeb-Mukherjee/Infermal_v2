@@ -279,6 +279,7 @@ If the private key is deleted or replaced, a new public key is derived and previ
 | `/api/v3/control/status` | `GET` | Yes |
 | `/api/v3/control/metrics` | `GET` | Yes |
 | `/api/v3/control/events.ndjson` | `GET` | Yes |
+| `/api/v3/details` | `GET` | Yes |
 
 ### Quick Test with curl
 
@@ -290,8 +291,14 @@ curl -s "$BASE/healthz"
 curl -s -X POST "$BASE/api/v3/control/start"  -H "X-API-Key: $PUB_KEY"
 curl -s "$BASE/api/v3/control/status"         -H "X-API-Key: $PUB_KEY"
 curl -s "$BASE/api/v3/control/metrics"        -H "X-API-Key: $PUB_KEY"
+curl -s "$BASE/api/v3/details?section=session,metrics,generated&limit=20" -H "X-API-Key: $PUB_KEY"
 curl -s -X POST "$BASE/api/v3/control/stop"   -H "X-API-Key: $PUB_KEY"
 ```
+
+`/api/v3/details` query params:
+
+- `section`: comma-separated sections (`session`, `metrics`, `generated`, `resolved`, `dns_intel`, `run_metrics`, `qps_history`) or `all`
+- `limit`: required positive integer from client (for example `50000`, `100000`) to control NDJSON rows returned per file-backed section
 
 Negative test:
 

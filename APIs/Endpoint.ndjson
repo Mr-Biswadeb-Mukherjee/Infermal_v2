@@ -5,3 +5,4 @@
 {"kind":"route","name":"status","method":"GET","path":"/api/v3/status","auth":true}
 {"kind":"route","name":"metrics","method":"GET","path":"/api/v3/metrics","auth":true}
 {"kind":"route","name":"events","method":"GET","path":"/api/v3/events.ndjson","auth":true}
+{"kind":"route","name":"details","method":"GET","path":"/api/v3/details","auth":true}
