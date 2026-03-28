@@ -4,6 +4,7 @@
 package cooldown
 
 import (
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -15,6 +16,9 @@ type Manager struct {
 
 	// gate channel blocks workers while cooldown is active
 	gate chan struct{}
+
+	mu        sync.RWMutex
+	watchOnce sync.Once
 }
 
 // NewManager creates a new cooldown manager.
@@ -28,13 +32,22 @@ func NewManager() *Manager {
 
 // Trigger activates cooldown for durSeconds (precise, millisecond-safe).
 func (m *Manager) Trigger(durSeconds int64) {
-	atomic.StoreInt32(&m.active, 1)
+	if durSeconds <= 0 {
+		return
+	}
 
 	expireAt := time.Now().Add(time.Duration(durSeconds) * time.Second).UnixNano()
-	atomic.StoreInt64(&m.until, expireAt)
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-	// Reset gate so new workers will block
-	m.gate = make(chan struct{})
+	if atomic.LoadInt32(&m.active) == 0 {
+		// transition into cooldown state with a fresh gate
+		m.gate = make(chan struct{})
+	}
+	if expireAt > atomic.LoadInt64(&m.until) {
+		atomic.StoreInt64(&m.until, expireAt)
+	}
+	atomic.StoreInt32(&m.active, 1)
 }
 
 // Active returns true if cooldown is active.
@@ -60,27 +73,32 @@ func (m *Manager) Remaining() int64 {
 
 // Gate returns the worker-block channel.
 func (m *Manager) Gate() chan struct{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.gate
 }
 
 // StartWatcher monitors cooldown expiration and releases the gate.
 func (m *Manager) StartWatcher() {
-	ticker := time.NewTicker(50 * time.Millisecond) // faster precision
-
-	go func() {
-		defer ticker.Stop()
-		for range ticker.C {
-			if !m.Active() {
-				continue
+	m.watchOnce.Do(func() {
+		ticker := time.NewTicker(50 * time.Millisecond) // faster precision
+		go func() {
+			defer ticker.Stop()
+			for range ticker.C {
+				if !m.Active() {
+					continue
+				}
+				if time.Now().UnixNano() < atomic.LoadInt64(&m.until) {
+					continue
+				}
+				m.mu.Lock()
+				if atomic.LoadInt32(&m.active) == 1 &&
+					time.Now().UnixNano() >= atomic.LoadInt64(&m.until) {
+					atomic.StoreInt32(&m.active, 0)
+					close(m.gate)
+				}
+				m.mu.Unlock()
 			}
-
-			now := time.Now().UnixNano()
-			until := atomic.LoadInt64(&m.until)
-
-			if now >= until {
-				atomic.StoreInt32(&m.active, 0)
-				close(m.gate) // safe: only closed once
-			}
-		}
-	}()
+		}()
+	})
 }

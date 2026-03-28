@@ -112,6 +112,24 @@ func TestTriggerRecreatesGate(t *testing.T) {
 	}
 }
 
+func TestTriggerKeepsGateWhenAlreadyActive(t *testing.T) {
+	m := NewManager()
+	m.Trigger(1)
+	gate := m.Gate()
+	firstUntil := atomic.LoadInt64(&m.until)
+
+	time.Sleep(100 * time.Millisecond)
+	m.Trigger(2)
+	secondUntil := atomic.LoadInt64(&m.until)
+
+	if gate != m.Gate() {
+		t.Fatalf("active cooldown must keep the same gate channel")
+	}
+	if secondUntil <= firstUntil {
+		t.Fatalf("expected retrigger to extend cooldown, first=%d second=%d", firstUntil, secondUntil)
+	}
+}
+
 func TestGateClosesOnlyOnce(t *testing.T) {
 	m := NewManager()
 	m.Trigger(1)

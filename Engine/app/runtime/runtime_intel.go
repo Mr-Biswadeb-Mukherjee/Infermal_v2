@@ -30,6 +30,7 @@ type intelPipeline struct {
 	store           intelQueueStore
 	generated       *generatedDomainSpool
 	service         DNSIntelService
+	cdm             CooldownManager
 	writer          RecordWriter
 	generatedWriter RecordWriter
 	resolvedWriter  RecordWriter
@@ -46,6 +47,7 @@ func newIntelPipeline(
 	store intelQueueStore,
 	generated *generatedDomainSpool,
 	service DNSIntelService,
+	cdm CooldownManager,
 	writerFactory WriterFactory,
 	paths Paths,
 	logErr moduleErrorLogger,
@@ -69,6 +71,7 @@ func newIntelPipeline(
 		store,
 		generated,
 		service,
+		cdm,
 		writer,
 		generatedWriter,
 		resolvedWriter,
@@ -84,6 +87,7 @@ func buildIntelPipeline(
 	store intelQueueStore,
 	generated *generatedDomainSpool,
 	service DNSIntelService,
+	cdm CooldownManager,
 	writer RecordWriter,
 	generatedWriter RecordWriter,
 	resolvedWriter RecordWriter,
@@ -95,6 +99,7 @@ func buildIntelPipeline(
 		store:           store,
 		generated:       generated,
 		service:         service,
+		cdm:             cdm,
 		writer:          writer,
 		generatedWriter: generatedWriter,
 		resolvedWriter:  resolvedWriter,
@@ -200,6 +205,18 @@ func (p *intelPipeline) consumeLoop() {
 		if value == intelStopMarker {
 			p.done <- nil
 			return
+		}
+		if p.cdm != nil {
+			if errs := waitForCooldown(p.ctx, p.cdm); len(errs) > 0 {
+				if p.ctx.Err() != nil {
+					p.done <- nil
+					return
+				}
+				for _, err := range errs {
+					p.logErr("dns-intel-cooldown-wait", value, err)
+				}
+				continue
+			}
 		}
 		p.processDomain(value)
 		if p.onDone != nil {

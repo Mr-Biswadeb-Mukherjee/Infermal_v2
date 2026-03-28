@@ -91,7 +91,7 @@ func (t *runtimeTuner) run(
 			if err := t.limiter.SetMaxHits(decision.RateLimit); err != nil && log != nil {
 				log.Warning("adaptive ratelimit update failed: %v", err)
 			}
-			if decision.Cooldown > 0 {
+			if decision.Cooldown > 0 && !cdm.Active() {
 				cdm.Trigger(ceilSeconds(decision.Cooldown))
 			}
 			t.logDecision(log, decision, snap)

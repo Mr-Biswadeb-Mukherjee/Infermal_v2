@@ -32,8 +32,11 @@ func makeDomainTask(
 			return nil, nil, nil, errs
 		}
 
-		denied, errs := waitForRateLimit(ctx, domain, limiter, tuner, logErr)
+		denied, errs := waitForRateLimit(ctx, domain, cdm, limiter, tuner, logErr)
 		if len(errs) > 0 {
+			return nil, nil, nil, errs
+		}
+		if errs := waitForCooldown(ctx, cdm); len(errs) > 0 {
 			return nil, nil, nil, errs
 		}
 
@@ -84,16 +87,15 @@ func waitForCooldown(ctx context.Context, cdm CooldownManager) []error {
 func waitForRateLimit(
 	ctx context.Context,
 	domain string,
+	cdm CooldownManager,
 	limiter RateLimiter,
 	tuner *runtimeTuner,
 	logErr moduleErrorLogger,
 ) (int64, []error) {
 	var denied int64
 	for {
-		select {
-		case <-ctx.Done():
-			return denied, []error{ctx.Err()}
-		default:
+		if errs := waitForCooldown(ctx, cdm); len(errs) > 0 {
+			return denied, errs
 		}
 
 		allowed, err := limiter.Allow(ctx, "dns-rate")
@@ -107,7 +109,20 @@ func waitForRateLimit(
 		}
 
 		denied++
-		time.Sleep(10 * time.Millisecond)
+		if err := sleepWithContext(ctx, 10*time.Millisecond); err != nil {
+			return denied, []error{err}
+		}
+	}
+}
+
+func sleepWithContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
 	}
 }
 

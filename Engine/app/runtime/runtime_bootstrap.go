@@ -162,6 +162,7 @@ func (rt *appRuntime) initRateLimiter(total int64, workers int) {
 
 func (rt *appRuntime) newModules(
 	ctx context.Context,
+	cdm CooldownManager,
 	onIntelDone func(),
 ) (*appModules, error) {
 	intelPipe, err := newIntelPipeline(
@@ -169,6 +170,7 @@ func (rt *appRuntime) newModules(
 		rt.cache,
 		rt.generated,
 		rt.modules.NewDNSIntelService(rt.cfg.DNSTimeoutMS),
+		cdm,
 		rt.writers,
 		rt.paths,
 		rt.logErr,
@@ -234,7 +236,7 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 	}
 
 	runner := newScanRunner(rt, total)
-	modules, err := rt.newModules(parentCtx, runner.onIntelDone())
+	modules, err := rt.newModules(parentCtx, runner.cdm, runner.onIntelDone())
 	if err != nil {
 		rt.logs.app.Alert("intel pipeline init failed: %v", err)
 		return fmt.Errorf("error starting dns intel pipeline: %w", err)
