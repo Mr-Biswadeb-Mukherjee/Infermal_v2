@@ -32,6 +32,6 @@ Thumbs.db
 Logs/
 
 # Project specific exclusions
-Setting/setting.conf
+Setting/*
 *.yaml
 Output

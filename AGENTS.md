@@ -2,7 +2,7 @@
 
 ## Coding Rules for Infermal_v2
 
-1. Every source file must stay between 80 and 250 LOC and must never exceed 250 LOC.
+1. Every source file must stay between 150 LOC and 250 LOC with extra 50 LOC as a grace means code file shouldn't exceed 300 LOC.
 2. Every function must stay under 40 LOC and must be split into smaller helpers if it grows.
 3. Each package must have a single clear responsibility and must not mix unrelated logic.
 4. Prefer modifying existing modules instead of creating new files unless responsibility clearly differs.

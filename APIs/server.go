@@ -60,11 +60,11 @@ func (s *Server) buildMux(contract EndpointContract) (*http.ServeMux, error) {
 func (s *Server) routeHandlers() map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
 		"health":          s.handleHealth,
-		"control.start":   s.handleStart,
-		"control.stop":    s.handleStop,
-		"control.status":  s.handleStatus,
-		"control.metrics": s.handleMetrics,
-		"control.events":  s.handleEvents,
+		"start":   s.handleStart,
+		"stop":    s.handleStop,
+		"status":  s.handleStatus,
+		"metrics": s.handleMetrics,
+		"events":  s.handleEvents,
 	}
 }
 

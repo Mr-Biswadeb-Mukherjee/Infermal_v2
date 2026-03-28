@@ -38,11 +38,11 @@ type contractRecord struct {
 
 var requiredRouteNames = []string{
 	"health",
-	"control.start",
-	"control.stop",
-	"control.status",
-	"control.metrics",
-	"control.events",
+	"start",
+	"stop",
+	"status",
+	"metrics",
+	"events",
 }
 
 func LoadEndpointContract(path string) (EndpointContract, error) {
