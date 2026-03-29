@@ -118,17 +118,19 @@ func (c *Controller) cooldownLocked(pressure float64) time.Duration {
 		return 0
 	}
 
-	if time.Since(c.lastCooldown) < c.cfg.CooldownMinGap {
+	now := time.Now()
+	if !c.lastCooldownEnd.IsZero() && now.Before(c.lastCooldownEnd.Add(c.cfg.CooldownMinGap)) {
 		return 0
 	}
 
-	c.lastCooldown = time.Now()
-
+	cooldown := cooldownDuration(pressure, c.cfg.CooldownMin, c.cfg.CooldownMax)
 	if c.stallTicks >= c.cfg.StallTickTrigger {
-		return c.cfg.CooldownMax
+		cooldown = c.cfg.CooldownMax
 	}
 
-	return cooldownDuration(pressure, c.cfg.CooldownMin, c.cfg.CooldownMax)
+	c.lastCooldown = now
+	c.lastCooldownEnd = now.Add(cooldown)
+	return cooldown
 }
 
 func cooldownDuration(pressure float64, minDur, maxDur time.Duration) time.Duration {

@@ -112,17 +112,18 @@ timeout_seconds=auto
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if cfg.RateLimit != 0 {
-		t.Fatalf("expected auto ratelimit=0 got %d", cfg.RateLimit)
+	defaults := getDefaultValues(t)
+	if cfg.RateLimit != defaults.RateLimit {
+		t.Fatalf("expected auto ratelimit=%d got %d", defaults.RateLimit, cfg.RateLimit)
 	}
-	if cfg.CooldownAfter != 0 {
-		t.Fatalf("expected auto cooldown_after=0 got %d", cfg.CooldownAfter)
+	if cfg.CooldownAfter != defaults.CooldownAfter {
+		t.Fatalf("expected auto cooldown_after=%d got %d", defaults.CooldownAfter, cfg.CooldownAfter)
 	}
-	if cfg.CooldownDuration != 0 {
-		t.Fatalf("expected auto cooldown_duration=0 got %d", cfg.CooldownDuration)
+	if cfg.CooldownDuration != defaults.CooldownDuration {
+		t.Fatalf("expected auto cooldown_duration=%d got %d", defaults.CooldownDuration, cfg.CooldownDuration)
 	}
-	if cfg.TimeoutSeconds != 0 {
-		t.Fatalf("expected auto timeout_seconds=0 got %d", cfg.TimeoutSeconds)
+	if cfg.TimeoutSeconds != defaults.TimeoutSeconds {
+		t.Fatalf("expected auto timeout_seconds=%d got %d", defaults.TimeoutSeconds, cfg.TimeoutSeconds)
 	}
 }
 

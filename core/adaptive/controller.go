@@ -60,9 +60,10 @@ type Controller struct {
 	rateWaitEWMA   float64
 	limiterErrEWMA float64
 
-	lastCooldown time.Time
-	stallTicks   int
-	window       sampleWindow
+	lastCooldown    time.Time
+	lastCooldownEnd time.Time
+	stallTicks      int
+	window          sampleWindow
 }
 
 func DefaultConfig(initialRate int64, initialTimeout time.Duration, workers int64) Config {

@@ -5,8 +5,6 @@ package runtime
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -23,9 +21,12 @@ type runtimeLogger interface {
 }
 
 type runtimeTuner struct {
-	controller   AdaptiveController
 	limiter      RateLimiter
+	baseRate     int64
 	rateCap      int64
+	cooldownEach int64
+	cooldownFor  int64
+	lastCooldown int64
 	timeoutNanos atomic.Int64
 	logTick      atomic.Int64
 }
@@ -37,13 +38,18 @@ func newRuntimeTuner(
 	factory AdaptiveFactory,
 	limiter RateLimiter,
 ) *runtimeTuner {
+	_ = factory
 	seedRate := seedRateLimit(cfg.RateLimit, total, workers, cfg.RateLimitCeiling)
 	seedTimeout := seedTimeoutValue(cfg.TimeoutSeconds, total)
 
 	tuner := &runtimeTuner{
-		controller: factory.NewController(seedRate, seedTimeout, int64(workers)),
-		limiter:    limiter,
-		rateCap:    normalizeRateLimitCap(cfg.RateLimitCeiling),
+		limiter:  limiter,
+		baseRate: seedRate,
+		rateCap:  normalizeRateLimitCap(cfg.RateLimitCeiling),
+		cooldownEach: normalizeCooldownAfter(
+			cfg.CooldownAfter,
+		),
+		cooldownFor: normalizeCooldownDuration(cfg.CooldownDuration),
 	}
 	tuner.timeoutNanos.Store(seedTimeout.Nanoseconds())
 	return tuner
@@ -58,14 +64,12 @@ func (t *runtimeTuner) resolveTimeout() time.Duration {
 }
 
 func (t *runtimeTuner) observeTask(latency time.Duration, resolveErr error, denied int64) {
-	t.controller.ObserveTask(latency, isPressureError(resolveErr))
-	if denied > 0 {
-		t.controller.ObserveRateLimited(denied)
-	}
+	_ = latency
+	_ = resolveErr
+	_ = denied
 }
 
 func (t *runtimeTuner) observeLimiterError() {
-	t.controller.ObserveLimiterError()
 }
 
 func (t *runtimeTuner) run(
@@ -74,29 +78,39 @@ func (t *runtimeTuner) run(
 	counters runtimeCounters,
 	log runtimeLogger,
 ) {
-	ticker := time.NewTicker(t.controller.EvalInterval())
+	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-
-	var lastCompleted int64
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			snap, completed := buildSnapshot(counters, lastCompleted)
-			lastCompleted = completed
-			decision := t.controller.Evaluate(snap)
-			decision.RateLimit = clampRateLimit(decision.RateLimit, t.rateCap)
-			t.timeoutNanos.Store(decision.Timeout.Nanoseconds())
-			if err := t.limiter.SetMaxHits(decision.RateLimit); err != nil && log != nil {
-				log.Warning("adaptive ratelimit update failed: %v", err)
+			snap, completed := buildSnapshot(counters, 0)
+			decision := AdaptiveDecision{
+				RateLimit: clampRateLimit(t.baseRate, t.rateCap),
+				Timeout:   t.resolveTimeout(),
 			}
-			if decision.Cooldown > 0 && !cdm.Active() {
-				cdm.Trigger(ceilSeconds(decision.Cooldown))
+			if !cdm.Active() && t.shouldTriggerCooldown(completed) {
+				cdm.Trigger(t.cooldownFor)
+				decision.Cooldown = time.Duration(t.cooldownFor) * time.Second
 			}
 			t.logDecision(log, decision, snap)
 		}
 	}
+}
+
+func (t *runtimeTuner) shouldTriggerCooldown(completed int64) bool {
+	if t.cooldownEach <= 0 || t.cooldownFor <= 0 {
+		return false
+	}
+	if completed <= 0 || completed%t.cooldownEach != 0 {
+		return false
+	}
+	if t.lastCooldown == completed {
+		return false
+	}
+	t.lastCooldown = completed
+	return true
 }
 
 func (t *runtimeTuner) logDecision(log runtimeLogger, d AdaptiveDecision, s AdaptiveSnapshot) {
@@ -110,8 +124,7 @@ func (t *runtimeTuner) logDecision(log runtimeLogger, d AdaptiveDecision, s Adap
 	}
 
 	log.Info(
-		"adaptive pressure=%.2f rate=%d timeout=%s queue=%d inflight=%d active=%d cooldown=%s",
-		d.Pressure,
+		"static control rate=%d timeout=%s queue=%d inflight=%d active=%d cooldown=%s",
 		d.RateLimit,
 		d.Timeout,
 		s.QueueDepth,
@@ -181,33 +194,6 @@ func seedTimeoutValue(configTimeout int, total int64) time.Duration {
 	}
 }
 
-func isPressureError(err error) bool {
-	if err == nil {
-		return false
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		return true
-	}
-
-	msg := strings.ToLower(err.Error())
-	if strings.Contains(msg, "no records found") || strings.Contains(msg, "no such host") {
-		return false
-	}
-	keywords := []string{
-		"timeout",
-		"temporary",
-		"connection refused",
-		"network is unreachable",
-		"server misbehaving",
-	}
-	for _, kw := range keywords {
-		if strings.Contains(msg, kw) {
-			return true
-		}
-	}
-	return false
-}
-
 func ceilSeconds(d time.Duration) int64 {
 	if d <= 0 {
 		return 0
@@ -231,6 +217,20 @@ func normalizeRateLimitCap(rateLimitCeiling int) int64 {
 		return 0
 	}
 	return int64(rateLimitCeiling)
+}
+
+func normalizeCooldownAfter(v int) int64 {
+	if v <= 0 {
+		return 0
+	}
+	return int64(v)
+}
+
+func normalizeCooldownDuration(v int) int64 {
+	if v <= 0 {
+		return 0
+	}
+	return int64(v)
 }
 
 func clampRateLimit(rate int64, rateCap int64) int64 {

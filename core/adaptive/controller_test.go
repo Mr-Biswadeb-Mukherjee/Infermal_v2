@@ -104,6 +104,31 @@ func TestCooldownRespectsMinGap(t *testing.T) {
 	}
 }
 
+func TestCooldownMinGapStartsAfterCooldownEnd(t *testing.T) {
+	cfg := DefaultConfig(180, 2*time.Second, 4)
+	cfg.CooldownMinGap = 10 * time.Second
+
+	c := NewController(cfg)
+	c.lastCooldown = time.Now().Add(-20 * time.Second)
+	c.lastCooldownEnd = time.Now()
+
+	for i := 0; i < 30; i++ {
+		c.ObserveTask(8*time.Second, true)
+		c.ObserveRateLimited(10)
+	}
+
+	decision := c.Evaluate(Snapshot{
+		QueueDepth:     700,
+		InFlight:       300,
+		ActiveWorkers:  4,
+		CompletedDelta: 0,
+	})
+
+	if decision.Cooldown != 0 {
+		t.Fatalf("cooldown should be suppressed until min gap passes after cooldown ends, got=%v", decision.Cooldown)
+	}
+}
+
 func TestDefaultConfigBuildsSafeBounds(t *testing.T) {
 	cfg := DefaultConfig(0, 0, 0)
 

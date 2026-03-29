@@ -35,3 +35,6 @@ Logs/
 Setting/*
 *.yaml
 Output
+.gocache
+DIBs_Output
+DIBs_Output/

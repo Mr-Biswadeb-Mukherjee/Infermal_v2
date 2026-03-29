@@ -55,6 +55,8 @@ func BuildEngineDependencies() (app.Dependencies, error) {
 		Config: app.Config{
 			RateLimit:            cfg.RateLimit,
 			RateLimitCeiling:     cfg.RateLimitCeiling,
+			CooldownAfter:        cfg.CooldownAfter,
+			CooldownDuration:     cfg.CooldownDuration,
 			TimeoutSeconds:       cfg.TimeoutSeconds,
 			MaxRetries:           cfg.MaxRetries,
 			AutoScale:            cfg.AutoScale,

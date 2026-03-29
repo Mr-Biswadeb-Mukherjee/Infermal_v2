@@ -31,11 +31,11 @@ type Config struct {
 
 var defaultConfig = Config{
 	// Worker / Performance defaults
-	RateLimit:        0, // auto
-	RateLimitCeiling: 160,
-	CooldownAfter:    0, // auto
-	CooldownDuration: 0, // auto
-	TimeoutSeconds:   0, // auto
+	RateLimit:        150,
+	RateLimitCeiling: 180,
+	CooldownAfter:    10000,
+	CooldownDuration: 60,
+	TimeoutSeconds:   3,
 	MaxRetries:       3,
 	AutoScale:        false,
 
@@ -200,7 +200,7 @@ func formatAutoInt(v int) string {
 
 func parseIntOrAuto(value string, fallback int) int {
 	if strings.EqualFold(strings.TrimSpace(value), "auto") {
-		return 0
+		return fallback
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {

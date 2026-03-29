@@ -62,8 +62,8 @@ func TestLoadOrCreateConfig_TrimsWhitespaceAroundKeys(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if cfg.RateLimit != 0 {
-		t.Fatalf("expected auto rate_limit=0 got %d", cfg.RateLimit)
+	if cfg.RateLimit != 150 {
+		t.Fatalf("expected auto rate_limit to fallback to static default 150, got %d", cfg.RateLimit)
 	}
 	if cfg.RateLimitCeiling != 160 {
 		t.Fatalf("expected rate_limit_ceiling=160 got %d", cfg.RateLimitCeiling)

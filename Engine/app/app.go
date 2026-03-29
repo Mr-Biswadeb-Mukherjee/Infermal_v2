@@ -94,6 +94,8 @@ func toRuntimeConfig(cfg Config) runtime.Config {
 	return runtime.Config{
 		RateLimit:            cfg.RateLimit,
 		RateLimitCeiling:     cfg.RateLimitCeiling,
+		CooldownAfter:        cfg.CooldownAfter,
+		CooldownDuration:     cfg.CooldownDuration,
 		TimeoutSeconds:       cfg.TimeoutSeconds,
 		MaxRetries:           cfg.MaxRetries,
 		AutoScale:            cfg.AutoScale,

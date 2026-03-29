@@ -11,6 +11,8 @@ import (
 type Config struct {
 	RateLimit            int
 	RateLimitCeiling     int
+	CooldownAfter        int
+	CooldownDuration     int
 	TimeoutSeconds       int
 	MaxRetries           int
 	AutoScale            bool
