@@ -6,6 +6,7 @@ package runtime
 import (
 	"context"
 	"errors"
+	"sync"
 	"strings"
 	"time"
 )
@@ -43,6 +44,7 @@ type intelPipeline struct {
 	done      chan error
 	logErr    moduleErrorLogger
 	onDone    func()
+	resolvedSeen sync.Map
 }
 
 func newIntelPipeline(
@@ -147,6 +149,7 @@ func newPipelineWriters(
 }
 
 func (p *intelPipeline) EnqueueResolved(domain string) bool {
+	// Queue is coordination/fallback only; normal resolved/intel writes happen immediately.
 	domain = strings.TrimSpace(domain)
 	if domain == "" {
 		return false
@@ -176,6 +179,10 @@ func (p *intelPipeline) writeResolved(domain string) bool {
 	domain = strings.TrimSpace(domain)
 	if domain == "" {
 		return false
+	}
+	// Idempotent guard so immediate path and fallback path never duplicate file output.
+	if !p.claimResolved(domain) {
+		return true
 	}
 	record := resolvedDomainRecord(domain, p.generatedMeta(domain))
 	p.resolvedWriter.WriteRecord(record)

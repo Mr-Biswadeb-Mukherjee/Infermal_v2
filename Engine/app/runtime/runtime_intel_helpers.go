@@ -91,6 +91,22 @@ func (p *intelPipeline) markGeneratedDone(domain string) {
 	}
 }
 
+func (p *intelPipeline) WriteResolved(domain string) bool {
+	return p.writeResolved(domain)
+}
+
+func (p *intelPipeline) claimResolved(domain string) bool {
+	if p == nil {
+		return false
+	}
+	domain = normalizeGeneratedDomainName(domain)
+	if domain == "" {
+		return false
+	}
+	_, loaded := p.resolvedSeen.LoadOrStore(domain, struct{}{})
+	return !loaded
+}
+
 func intelLookupTimeout(dnsTimeoutMS int64) time.Duration {
 	if dnsTimeoutMS <= 0 {
 		return 3 * time.Second

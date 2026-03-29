@@ -196,16 +196,41 @@ func (sr *scanRunner) handleWorkerResult(
 }
 
 func (sr *scanRunner) markResolved(domain string, intelPipe *intelPipeline) {
-	atomic.AddInt64(&sr.resolved, 1)
-	if intelPipe.EnqueueResolved(domain) {
+	// Durability-first contract: once DNS resolves, persist resolved output immediately.
+	if !intelPipe.WriteResolved(domain) {
 		return
 	}
-	intelPipe.WriteResolvedFallback(domain)
-	atomic.AddInt64(&sr.intelDone, 1)
+	atomic.AddInt64(&sr.resolved, 1)
+	sr.processIntelImmediately(domain, intelPipe)
 }
 
 func (sr *scanRunner) markUnresolved(domain string, intelPipe *intelPipeline) {
 	intelPipe.WriteUnresolved(domain)
+	atomic.AddInt64(&sr.intelDone, 1)
+}
+
+func (sr *scanRunner) processIntelImmediately(domain string, intelPipe *intelPipeline) {
+	// Redis remains for coordination and metadata, but intel output is written inline.
+	if intelPipe == nil {
+		atomic.AddInt64(&sr.intelDone, 1)
+		return
+	}
+	if intelPipe.parentCanceled() {
+		intelPipe.WriteResolvedFallback(domain)
+		atomic.AddInt64(&sr.intelDone, 1)
+		return
+	}
+	if intelPipe.cdm != nil {
+		if errs := waitForCooldown(intelPipe.ctx, intelPipe.cdm); len(errs) > 0 {
+			for _, err := range errs {
+				sr.rt.logErr("dns-intel-cooldown-wait", domain, err)
+			}
+			intelPipe.WriteResolvedFallback(domain)
+			atomic.AddInt64(&sr.intelDone, 1)
+			return
+		}
+	}
+	intelPipe.processDomain(domain)
 	atomic.AddInt64(&sr.intelDone, 1)
 }
 
