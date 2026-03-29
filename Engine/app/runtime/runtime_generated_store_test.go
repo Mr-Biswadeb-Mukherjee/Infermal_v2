@@ -146,6 +146,7 @@ func TestStreamGeneratedDomainsToSpoolStagesAndPops(t *testing.T) {
 		modules,
 		store,
 		outputPath,
+		6,
 	)
 	if err != nil {
 		t.Fatalf("streamGeneratedDomainsToSpool error: %v", err)
@@ -201,7 +202,7 @@ func TestLoadGeneratedMetaFallsBackToSpool(t *testing.T) {
 	store := newFakeGeneratedCacheStore()
 	outputPath := t.TempDir() + "/Generated_Domain.ndjson"
 
-	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath)
+	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath, 6)
 	if err != nil {
 		t.Fatalf("streamGeneratedDomainsToSpool error: %v", err)
 	}

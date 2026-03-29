@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -25,6 +26,7 @@ const (
 	generatedInsertBatchSize   = 1000
 	generatedSpoolMetaTable    = "generated_spool_meta"
 	generatedSpoolSignatureKey = "keywords_signature"
+	generatedSpoolLastCycleKey = "last_resolve_cycle_unix"
 )
 
 type spooledGeneratedDomain struct {
@@ -38,8 +40,8 @@ type generatedDomainSpool struct {
 	mu        sync.Mutex
 }
 
-func newGeneratedDomainSpool(generatedOutput string) (*generatedDomainSpool, error) {
-	dbPath := generatedSpoolPath(generatedOutput)
+func newGeneratedDomainSpool(keywordsPath string) (*generatedDomainSpool, error) {
+	dbPath := generatedSpoolPath(keywordsPath)
 	if err := ensureSpoolDir(dbPath); err != nil {
 		return nil, err
 	}
@@ -56,8 +58,8 @@ func newGeneratedDomainSpool(generatedOutput string) (*generatedDomainSpool, err
 	return spool, nil
 }
 
-func generatedSpoolPath(generatedOutput string) string {
-	clean := strings.TrimSpace(generatedOutput)
+func generatedSpoolPath(keywordsPath string) string {
+	clean := strings.TrimSpace(keywordsPath)
 	dir := filepath.Dir(clean)
 	if dir == "" || dir == "." {
 		dir = "."
@@ -246,6 +248,33 @@ func (s *generatedDomainSpool) loadSignature(ctx context.Context) (string, error
 	return strings.TrimSpace(value), nil
 }
 
+func (s *generatedDomainSpool) loadLastCycleUnix(ctx context.Context) (int64, error) {
+	value, err := s.loadMetaValue(ctx, generatedSpoolLastCycleKey)
+	if err != nil || value == "" {
+		return 0, err
+	}
+	unixTs, parseErr := strconv.ParseInt(value, 10, 64)
+	if parseErr != nil {
+		return 0, nil
+	}
+	return unixTs, nil
+}
+
+func (s *generatedDomainSpool) loadMetaValue(ctx context.Context, key string) (string, error) {
+	if s == nil || s.db == nil {
+		return "", errors.New("generated spool db is not initialized")
+	}
+	row := s.db.QueryRowContext(ctx, "SELECT value FROM generated_spool_meta WHERE key = ?", strings.TrimSpace(key))
+	var value string
+	if err := row.Scan(&value); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
+		return "", fmt.Errorf("read generated spool meta key=%s: %w", key, err)
+	}
+	return strings.TrimSpace(value), nil
+}
+
 func (s *generatedDomainSpool) upsertSignature(ctx context.Context, value string) error {
 	if s == nil || s.db == nil {
 		return errors.New("generated spool db is not initialized")
@@ -257,6 +286,25 @@ ON CONFLICT(key) DO UPDATE SET value = excluded.value
 `, generatedSpoolSignatureKey, strings.TrimSpace(value))
 	if err != nil {
 		return fmt.Errorf("upsert generated spool signature: %w", err)
+	}
+	return nil
+}
+
+func (s *generatedDomainSpool) upsertLastCycleUnix(ctx context.Context, unixTs int64) error {
+	return s.upsertMetaValue(ctx, generatedSpoolLastCycleKey, strconv.FormatInt(unixTs, 10))
+}
+
+func (s *generatedDomainSpool) upsertMetaValue(ctx context.Context, key, value string) error {
+	if s == nil || s.db == nil {
+		return errors.New("generated spool db is not initialized")
+	}
+	_, err := s.db.ExecContext(ctx, `
+INSERT INTO generated_spool_meta(key, value)
+VALUES(?, ?)
+ON CONFLICT(key) DO UPDATE SET value = excluded.value
+`, strings.TrimSpace(key), strings.TrimSpace(value))
+	if err != nil {
+		return fmt.Errorf("upsert generated spool meta key=%s: %w", key, err)
 	}
 	return nil
 }

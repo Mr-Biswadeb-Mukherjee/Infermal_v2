@@ -9,15 +9,16 @@ import (
 )
 
 type Config struct {
-	RateLimit        int
-	RateLimitCeiling int
-	TimeoutSeconds   int
-	MaxRetries       int
-	AutoScale        bool
-	UpstreamDNS      string
-	BackupDNS        string
-	DNSRetries       int
-	DNSTimeoutMS     int64
+	RateLimit            int
+	RateLimitCeiling     int
+	TimeoutSeconds       int
+	MaxRetries           int
+	AutoScale            bool
+	UpstreamDNS          string
+	BackupDNS            string
+	DNSRetries           int
+	DNSTimeoutMS         int64
+	ResolveIntervalHours int
 }
 
 type Paths struct {

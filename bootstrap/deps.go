@@ -53,15 +53,16 @@ func BuildEngineDependencies() (app.Dependencies, error) {
 
 	return app.Dependencies{
 		Config: app.Config{
-			RateLimit:        cfg.RateLimit,
-			RateLimitCeiling: cfg.RateLimitCeiling,
-			TimeoutSeconds:   cfg.TimeoutSeconds,
-			MaxRetries:       cfg.MaxRetries,
-			AutoScale:        cfg.AutoScale,
-			UpstreamDNS:      cfg.UpstreamDNS,
-			BackupDNS:        cfg.BackupDNS,
-			DNSRetries:       cfg.DNSRetries,
-			DNSTimeoutMS:     cfg.DNSTimeoutMS,
+			RateLimit:            cfg.RateLimit,
+			RateLimitCeiling:     cfg.RateLimitCeiling,
+			TimeoutSeconds:       cfg.TimeoutSeconds,
+			MaxRetries:           cfg.MaxRetries,
+			AutoScale:            cfg.AutoScale,
+			UpstreamDNS:          cfg.UpstreamDNS,
+			BackupDNS:            cfg.BackupDNS,
+			DNSRetries:           cfg.DNSRetries,
+			DNSTimeoutMS:         cfg.DNSTimeoutMS,
+			ResolveIntervalHours: cfg.ResolveIntervalHours,
 		},
 		Paths: app.Paths{
 			KeywordsCSV:      paths.keywordsCSV,

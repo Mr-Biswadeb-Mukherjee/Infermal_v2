@@ -22,10 +22,11 @@ type Config struct {
 	AutoScale        bool
 
 	// DNS settings
-	UpstreamDNS  string
-	BackupDNS    string
-	DNSRetries   int
-	DNSTimeoutMS int64
+	UpstreamDNS          string
+	BackupDNS            string
+	DNSRetries           int
+	DNSTimeoutMS         int64
+	ResolveIntervalHours int
 }
 
 var defaultConfig = Config{
@@ -39,10 +40,11 @@ var defaultConfig = Config{
 	AutoScale:        false,
 
 	// DNS defaults
-	UpstreamDNS:  "9.9.9.9:53",
-	BackupDNS:    "1.1.1.1:53",
-	DNSRetries:   2,
-	DNSTimeoutMS: 500,
+	UpstreamDNS:          "9.9.9.9:53",
+	BackupDNS:            "1.1.1.1:53",
+	DNSRetries:           2,
+	DNSTimeoutMS:         500,
+	ResolveIntervalHours: 6,
 }
 
 func LoadOrCreateConfig(path string) (Config, error) {
@@ -96,7 +98,8 @@ func defaultConfigText() string {
 			"upstream_dns=%s\n"+
 			"backup_dns=%s\n"+
 			"dns_retries=%d\n"+
-			"dns_timeout_ms=%d\n",
+			"dns_timeout_ms=%d\n"+
+			"resolve_interval_hours=%d\n",
 		formatAutoInt(defaultConfig.RateLimit),
 		defaultConfig.RateLimitCeiling,
 		formatAutoInt(defaultConfig.CooldownAfter),
@@ -108,6 +111,7 @@ func defaultConfigText() string {
 		defaultConfig.BackupDNS,
 		defaultConfig.DNSRetries,
 		defaultConfig.DNSTimeoutMS,
+		defaultConfig.ResolveIntervalHours,
 	)
 }
 
@@ -168,6 +172,9 @@ var configSetters = map[string]func(*Config, string){
 	"dns_timeout_ms": func(cfg *Config, value string) {
 		ms, _ := strconv.Atoi(value)
 		cfg.DNSTimeoutMS = int64(ms)
+	},
+	"resolve_interval_hours": func(cfg *Config, value string) {
+		cfg.ResolveIntervalHours = parsePositiveInt(value, cfg.ResolveIntervalHours)
 	},
 }
 

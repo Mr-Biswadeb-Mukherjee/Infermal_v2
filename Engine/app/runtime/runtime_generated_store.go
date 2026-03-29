@@ -41,15 +41,24 @@ func streamGeneratedDomainsToSpool(
 	modules ModuleFactory,
 	store CacheStore,
 	generatedOutput string,
+	resolveIntervalHours int,
 ) (int64, *generatedDomainSpool, error) {
 	if err := resetGeneratedDomainQueue(store); err != nil {
 		return 0, nil, err
 	}
-	spool, err := newGeneratedDomainSpool(generatedOutput)
+	spoolPathSeed := resolveSpoolPathSeed(path, generatedOutput)
+	spool, err := newGeneratedDomainSpool(spoolPathSeed)
 	if err != nil {
 		return 0, nil, err
 	}
-	pending, err := prepareGeneratedSpoolForRun(ctx, spool, path, modules, generatedOutput)
+	pending, err := prepareGeneratedSpoolForRun(
+		ctx,
+		spool,
+		path,
+		modules,
+		generatedOutput,
+		resolveIntervalHours,
+	)
 	if err != nil {
 		_ = spool.Close()
 		return 0, nil, err
@@ -65,24 +74,77 @@ func streamGeneratedDomainsToSpool(
 	return pending, spool, nil
 }
 
+func resolveSpoolPathSeed(keywordsPath, generatedOutput string) string {
+	if strings.TrimSpace(keywordsPath) != "" {
+		return keywordsPath
+	}
+	return generatedOutput
+}
+
 func prepareGeneratedSpoolForRun(
 	ctx context.Context,
 	spool *generatedDomainSpool,
 	path string,
 	modules ModuleFactory,
 	generatedOutput string,
+	resolveIntervalHours int,
 ) (int64, error) {
 	count, err := spool.ensureDataset(ctx, path, modules)
 	if err != nil || count == 0 {
 		return count, err
 	}
-	if err := spool.prepareRun(ctx); err != nil {
-		return 0, err
-	}
 	if err := spool.syncDoneFromGeneratedOutput(ctx, generatedOutput); err != nil {
 		return 0, err
 	}
-	return spool.pendingCount(ctx)
+	pending, err := spool.pendingCount(ctx)
+	if err != nil {
+		return 0, err
+	}
+	now := time.Now()
+	lastCycleUnix, err := spool.loadLastCycleUnix(ctx)
+	if err != nil {
+		return 0, err
+	}
+	due := cycleDue(lastCycleUnix, now, resolveIntervalFromConfig(resolveIntervalHours))
+	if due && pending == 0 {
+		if err := spool.resetResolveCycle(ctx); err != nil {
+			return 0, err
+		}
+		pending = count
+	}
+	if err := spool.prepareRun(ctx); err != nil {
+		return 0, err
+	}
+	if shouldMarkCycleStart(lastCycleUnix, due, pending) {
+		if err := spool.markResolveCycleStarted(ctx, now); err != nil {
+			return 0, err
+		}
+	}
+	return pending, nil
+}
+
+func resolveIntervalFromConfig(hours int) time.Duration {
+	if hours <= 0 {
+		hours = 6
+	}
+	return time.Duration(hours) * time.Hour
+}
+
+func cycleDue(lastCycleUnix int64, now time.Time, interval time.Duration) bool {
+	if interval <= 0 || lastCycleUnix <= 0 {
+		return true
+	}
+	return now.Sub(time.Unix(lastCycleUnix, 0)) >= interval
+}
+
+func shouldMarkCycleStart(lastCycleUnix int64, due bool, pending int64) bool {
+	if pending <= 0 {
+		return false
+	}
+	if lastCycleUnix <= 0 {
+		return true
+	}
+	return due
 }
 
 func primeGeneratedQueue(

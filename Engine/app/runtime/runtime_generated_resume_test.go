@@ -21,7 +21,7 @@ func TestStreamGeneratedDomainsToSpoolResumesFromGeneratedOutput(t *testing.T) {
 		t.Fatalf("write generated output fixture: %v", err)
 	}
 
-	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath)
+	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath, 6)
 	if err != nil {
 		t.Fatalf("streamGeneratedDomainsToSpool error: %v", err)
 	}
@@ -47,7 +47,7 @@ func TestStreamGeneratedDomainsToSpoolReuseDBWithoutRegeneration(t *testing.T) {
 	}
 	outputPath := filepath.Join(t.TempDir(), "Generated_Domain.ndjson")
 
-	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, newFakeGeneratedCacheStore(), outputPath)
+	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, newFakeGeneratedCacheStore(), outputPath, 6)
 	if err != nil {
 		t.Fatalf("first spool run failed: %v", err)
 	}
@@ -57,7 +57,7 @@ func TestStreamGeneratedDomainsToSpoolReuseDBWithoutRegeneration(t *testing.T) {
 	if err := os.WriteFile(outputPath, content, 0o600); err != nil {
 		t.Fatalf("write generated output fixture: %v", err)
 	}
-	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, newFakeGeneratedCacheStore(), outputPath)
+	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, newFakeGeneratedCacheStore(), outputPath, 6)
 	if err != nil {
 		t.Fatalf("second spool run failed: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestStreamGeneratedDomainsToSpoolHandlesDuplicateOutputDomains(t *testing.T
 		t.Fatalf("write generated output fixture: %v", err)
 	}
 
-	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath)
+	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), "", modules, store, outputPath, 6)
 	if err != nil {
 		t.Fatalf("streamGeneratedDomainsToSpool error: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestStreamGeneratedDomainsToSpoolRegeneratesOnSignatureMismatch(t *testing.
 	firstModules := fakeGeneratedModuleFactory{
 		items: []GeneratedDomain{{Domain: "old.example", RiskScore: 0.41, Confidence: "low", GeneratedBy: "dga"}},
 	}
-	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), pathA, firstModules, newFakeGeneratedCacheStore(), outputPath)
+	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), pathA, firstModules, newFakeGeneratedCacheStore(), outputPath, 6)
 	if err != nil {
 		t.Fatalf("first spool run failed: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestStreamGeneratedDomainsToSpoolRegeneratesOnSignatureMismatch(t *testing.
 		items:       []GeneratedDomain{{Domain: "new.example", RiskScore: 0.81, Confidence: "high", GeneratedBy: "mutation"}},
 	}
 	store := newFakeGeneratedCacheStore()
-	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), pathB, secondModules, store, outputPath)
+	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), pathB, secondModules, store, outputPath, 6)
 	if err != nil {
 		t.Fatalf("second spool run failed: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestStreamGeneratedDomainsToSpoolRegeneratesLegacyDataset(t *testing.T) {
 	firstModules := fakeGeneratedModuleFactory{
 		items: []GeneratedDomain{{Domain: "legacy.example", RiskScore: 0.22, Confidence: "low", GeneratedBy: "dga"}},
 	}
-	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), path, firstModules, newFakeGeneratedCacheStore(), outputPath)
+	_, spool, err := streamGeneratedDomainsToSpool(context.Background(), path, firstModules, newFakeGeneratedCacheStore(), outputPath, 6)
 	if err != nil {
 		t.Fatalf("first spool run failed: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestStreamGeneratedDomainsToSpoolRegeneratesLegacyDataset(t *testing.T) {
 		items:       []GeneratedDomain{{Domain: "fresh.example", RiskScore: 0.72, Confidence: "high", GeneratedBy: "mutation"}},
 	}
 	store := newFakeGeneratedCacheStore()
-	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), path, secondModules, store, outputPath)
+	total, spool, err := streamGeneratedDomainsToSpool(context.Background(), path, secondModules, store, outputPath, 6)
 	if err != nil {
 		t.Fatalf("legacy-resume spool run failed: %v", err)
 	}

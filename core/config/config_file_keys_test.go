@@ -38,6 +38,7 @@ func TestDefaultFileContainsAllKeys(t *testing.T) {
 		"backup_dns=",
 		"dns_retries=",
 		"dns_timeout_ms=",
+		"resolve_interval_hours=",
 	}
 
 	text := string(data)

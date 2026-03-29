@@ -190,12 +190,20 @@ func (rt *appRuntime) newModules(
 
 func loadGeneratedDomains(
 	ctx context.Context,
+	cfg Config,
 	generatedOutput string,
 	path string,
 	modules ModuleFactory,
 	store CacheStore,
 ) (int64, *generatedDomainSpool, error) {
-	total, spool, err := streamGeneratedDomainsToSpool(ctx, path, modules, store, generatedOutput)
+	total, spool, err := streamGeneratedDomainsToSpool(
+		ctx,
+		path,
+		modules,
+		store,
+		generatedOutput,
+		cfg.ResolveIntervalHours,
+	)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -218,6 +226,7 @@ func Run(parentCtx context.Context, deps Dependencies) error {
 
 	total, spool, err := loadGeneratedDomains(
 		parentCtx,
+		rt.cfg,
 		rt.paths.GeneratedOutput,
 		rt.paths.KeywordsCSV,
 		rt.modules,

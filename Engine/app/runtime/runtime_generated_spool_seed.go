@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 func (s *generatedDomainSpool) ensureDataset(
@@ -110,6 +111,21 @@ func (s *generatedDomainSpool) clearDataset(ctx context.Context) error {
 		return fmt.Errorf("clear generated spool metadata: %w", metaErr)
 	}
 	return nil
+}
+
+func (s *generatedDomainSpool) resetResolveCycle(ctx context.Context) error {
+	if s == nil || s.db == nil {
+		return errors.New("generated spool db is not initialized")
+	}
+	_, err := s.db.ExecContext(ctx, "UPDATE generated_domains SET done = 0, queued = 0")
+	if err != nil {
+		return fmt.Errorf("reset generated spool resolve cycle: %w", err)
+	}
+	return nil
+}
+
+func (s *generatedDomainSpool) markResolveCycleStarted(ctx context.Context, now time.Time) error {
+	return s.upsertLastCycleUnix(ctx, now.Unix())
 }
 
 type spoolBatchWriter struct {

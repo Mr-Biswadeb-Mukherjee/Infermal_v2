@@ -56,6 +56,7 @@ autoscale=true
 upstream_dns=8.8.8.8:53
 dns_retries=5
 dns_timeout_ms=999
+resolve_interval_hours=12
 `
 	if err := os.WriteFile(cfgPath, []byte(content), 0644); err != nil {
 		t.Fatalf("write failed: %v", err)
@@ -86,6 +87,9 @@ dns_timeout_ms=999
 	}
 	if cfg.DNSTimeoutMS != 999 {
 		t.Fatalf("wrong dns timeout: %d", cfg.DNSTimeoutMS)
+	}
+	if cfg.ResolveIntervalHours != 12 {
+		t.Fatalf("wrong resolve interval hours: %d", cfg.ResolveIntervalHours)
 	}
 }
 

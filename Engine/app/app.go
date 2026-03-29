@@ -90,15 +90,16 @@ func buildRuntimeDependencies(deps Dependencies) runtime.Dependencies {
 
 func toRuntimeConfig(cfg Config) runtime.Config {
 	return runtime.Config{
-		RateLimit:        cfg.RateLimit,
-		RateLimitCeiling: cfg.RateLimitCeiling,
-		TimeoutSeconds:   cfg.TimeoutSeconds,
-		MaxRetries:       cfg.MaxRetries,
-		AutoScale:        cfg.AutoScale,
-		UpstreamDNS:      cfg.UpstreamDNS,
-		BackupDNS:        cfg.BackupDNS,
-		DNSRetries:       cfg.DNSRetries,
-		DNSTimeoutMS:     cfg.DNSTimeoutMS,
+		RateLimit:            cfg.RateLimit,
+		RateLimitCeiling:     cfg.RateLimitCeiling,
+		TimeoutSeconds:       cfg.TimeoutSeconds,
+		MaxRetries:           cfg.MaxRetries,
+		AutoScale:            cfg.AutoScale,
+		UpstreamDNS:          cfg.UpstreamDNS,
+		BackupDNS:            cfg.BackupDNS,
+		DNSRetries:           cfg.DNSRetries,
+		DNSTimeoutMS:         cfg.DNSTimeoutMS,
+		ResolveIntervalHours: cfg.ResolveIntervalHours,
 	}
 }
 

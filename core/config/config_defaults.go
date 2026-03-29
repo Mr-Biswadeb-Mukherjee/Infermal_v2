@@ -27,6 +27,7 @@ var configEntries = []configEntry{
 	{key: "backup_dns", value: defaultConfig.BackupDNS},
 	{key: "dns_retries", value: strconv.Itoa(defaultConfig.DNSRetries)},
 	{key: "dns_timeout_ms", value: strconv.FormatInt(defaultConfig.DNSTimeoutMS, 10)},
+	{key: "resolve_interval_hours", value: strconv.Itoa(defaultConfig.ResolveIntervalHours)},
 }
 
 func ensureConfigEntries(path string) error {
