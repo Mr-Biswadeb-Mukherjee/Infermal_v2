@@ -6,7 +6,7 @@ package app
 import (
 	"time"
 
-	runtime "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/runtime"
+	runtime "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/runtime"
 )
 
 type cooldownFactoryAdapter struct {

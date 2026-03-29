@@ -1,6 +1,6 @@
-# Contributing to Infermal_v2
+# Contributing to DIBS
 
-Thank you for your interest in contributing to **Infermal_v2**.
+Thank you for your interest in contributing to **DIBS**.
 
 This project is a **domain intelligence and DNS behavior analysis framework** designed with a strict, modular architecture and a focus on performance, correctness, and long-term maintainability.
 
@@ -22,7 +22,7 @@ Pull requests that violate structural rules will be rejected.
 
 ## Architecture Rules (Mandatory)
 
-Infermal_v2 follows strict design constraints:
+DIBS follows strict design constraints:
 
 * **No cross-module imports**
 * **No horizontal module dependencies**
@@ -108,7 +108,7 @@ Violating these rules breaks the system design and will not be accepted.
 Example:
 
 ```
-go build -o infermal_v2 .
+go build -o DIBS .
 go test ./...
 ```
 
@@ -116,7 +116,7 @@ go test ./...
 
 ## Responsible Contribution
 
-Infermal_v2 is intended for:
+DIBS is intended for:
 
 * Security research
 * Threat intelligence

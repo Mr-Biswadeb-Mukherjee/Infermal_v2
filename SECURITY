@@ -2,7 +2,7 @@
 
 ## Reporting Vulnerabilities
 
-If you discover a security vulnerability in **Infermal_v2**, please report it responsibly.
+If you discover a security vulnerability in **DIBS**, please report it responsibly.
 
 **Do not open a public issue for security-related vulnerabilities.**
 
@@ -20,7 +20,7 @@ Instead:
 
 This policy applies to vulnerabilities affecting:
 
-* Infermal_v2 source code and internal modules
+* DIBS source code and internal modules
 * Domain generation and mutation logic
 * DNS resolution engine (recursive and stub resolvers)
 * Runtime control mechanisms (rate limiter, cooldown, worker system)
@@ -55,7 +55,7 @@ Researchers are expected to follow responsible disclosure practices:
 
 ## Disclaimer
 
-Infermal_v2 is a cybersecurity research and threat intelligence framework.
+DIBS is a cybersecurity research and threat intelligence framework.
 
 It is intended for controlled research, analysis, and defensive security purposes.
 It is **not intended for malicious use**.

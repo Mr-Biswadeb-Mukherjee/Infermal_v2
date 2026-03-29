@@ -1,4 +1,4 @@
-name: Infermal v2 CI
+name: DIBs v2 CI
 
 on:
   push:
@@ -20,7 +20,7 @@ env:
   CYCLO_THRESHOLD: "10"
   SLOC_WARN: "250"
   SLOC_FAIL: "300"
-  BINARY_NAME: "infermal"
+  BINARY_NAME: "DIBs"
 
 jobs:
   quality:
@@ -262,7 +262,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: infermal-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: DIBs-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
           retention-days: 7
 
@@ -287,7 +287,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: infermal-*
+          pattern: DIBs-*
           path: dist/
           merge-multiple: true
 

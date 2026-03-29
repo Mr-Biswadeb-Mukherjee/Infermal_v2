@@ -1,7 +1,7 @@
 ## Project Structure
 
 ```
-Infermal_v2/
+DIBS/
 ├── main.go                          # Root launcher entry point
 ├── go.mod                           # Launcher module wiring root -> Engine
 │
@@ -73,7 +73,7 @@ Infermal_v2/
 ├── README.md
 ├── LICENSE / NOTICE
 └── System_Design/
-    ├── Infermal_v2-SAD.drawio.png
-    ├── Infermal_v2-DataFlow-Part1.png
-    └── Infermal_v2-DataFlow-Part2.png
+    ├── DIBS-SAD.drawio.png
+    ├── DIBS-DataFlow-Part1.png
+    └── DIBS-DataFlow-Part2.png
 ```

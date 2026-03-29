@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	filewriter "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/filewriter"
-	wpkg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/worker"
+	app "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app"
+	filewriter "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/filewriter"
+	wpkg "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/worker"
 )
 
 type workerPoolFactoryAdapter struct{}

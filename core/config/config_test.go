@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/config"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/core/config"
 )
 
 func getDefaultValues(t *testing.T) config.Config {

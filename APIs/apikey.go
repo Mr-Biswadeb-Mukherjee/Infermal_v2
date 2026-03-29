@@ -16,14 +16,14 @@ import (
 )
 
 const (
-	privateKeyEnv         = "INFERMAL_API_PRIVATE_KEY"
-	privateKeyPathEnv     = "INFERMAL_API_PRIVATE_KEY_PATH"
+	privateKeyEnv         = "DIBs_API_PRIVATE_KEY"
+	privateKeyPathEnv     = "DIBs_API_PRIVATE_KEY_PATH"
 	defaultPrivateKeyPath = "Setting/api_private.key"
 
 	privateKeyLabelPrefix = "prvkey_"
 	publicKeyLabelPrefix  = "pubkey_"
 	keyAlgorithm          = "ed25519"
-	publicKeyNamespace    = "Infermal_v2"
+	publicKeyNamespace    = "DIBS"
 )
 
 var errInvalidPrivateKey = errors.New("invalid private api key")

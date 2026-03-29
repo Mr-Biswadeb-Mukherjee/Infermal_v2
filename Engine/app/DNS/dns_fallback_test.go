@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/DNS"
+	dns "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/DNS"
 )
 
 func TestResolveSystemFallback(t *testing.T) {

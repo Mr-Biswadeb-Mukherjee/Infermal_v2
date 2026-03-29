@@ -6,8 +6,8 @@ package recon
 import (
 	"errors"
 
-	mutationgen "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon/Mutation"
-	dgagen "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon/dga"
+	mutationgen "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon/Mutation"
+	dgagen "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon/dga"
 )
 
 type ScoredDomainSink func(GeneratedDomain) error

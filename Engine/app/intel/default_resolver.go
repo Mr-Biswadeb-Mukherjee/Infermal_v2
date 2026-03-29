@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/intel/dns_intel"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/intel/dns_intel"
 )
 
 type defaultResolver struct {

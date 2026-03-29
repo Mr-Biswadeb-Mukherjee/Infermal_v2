@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	dns "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/DNS"
-	recon "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon"
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/intel"
-	runtime "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/runtime"
+	dns "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/DNS"
+	recon "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/intel"
+	runtime "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/runtime"
 )
 
 type GeneratedDomain struct {

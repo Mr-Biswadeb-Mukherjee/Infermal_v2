@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	adaptive "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/adaptive"
-	ratelimiter "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/ratelimiter"
+	app "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app"
+	adaptive "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/adaptive"
+	ratelimiter "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/ratelimiter"
 )
 
 type rateLimiterAdapter struct{}

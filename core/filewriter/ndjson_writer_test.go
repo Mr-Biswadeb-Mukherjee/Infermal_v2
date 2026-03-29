@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/filewriter"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/core/filewriter"
 )
 
 type dnsIntelNDJSON struct {

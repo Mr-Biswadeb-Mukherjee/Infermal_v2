@@ -1,4 +1,4 @@
-module github.com/Mr-Biswadeb-Mukherjee/Infermal_v2
+module github.com/Mr-Biswadeb-Mukherjee/DIBs
 
 go 1.24.9
 

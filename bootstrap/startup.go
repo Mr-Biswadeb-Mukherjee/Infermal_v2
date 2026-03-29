@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	ui "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/ui"
+	ui "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/ui"
 )
 
 type startupAdapter struct {

@@ -13,9 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	apis "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/APIs"
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	bootstrap "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/bootstrap"
+	apis "github.com/Mr-Biswadeb-Mukherjee/DIBs/APIs"
+	app "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app"
+	bootstrap "github.com/Mr-Biswadeb-Mukherjee/DIBs/bootstrap"
 )
 
 const (
@@ -43,7 +43,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Infermal API public key: %s\n", keys.Public)
+	fmt.Printf("DIBS API public key: %s\n", keys.Public)
 	server := newHTTPServer(apiAddr, router)
 	return serveUntilShutdown(server, manager)
 }
@@ -93,7 +93,7 @@ func serveUntilShutdown(server *http.Server, manager *apis.SessionManager) error
 }
 
 func startHTTPServer(server *http.Server, errCh chan<- error) {
-	fmt.Printf("Infermal API listening on %s\n", server.Addr)
+	fmt.Printf("DIBS API listening on %s\n", server.Addr)
 	err := server.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
 		errCh <- nil

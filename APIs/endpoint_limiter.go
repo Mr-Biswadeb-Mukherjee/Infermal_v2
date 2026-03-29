@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	redis "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/redis"
+	redis "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/redis"
 )
 
 const (

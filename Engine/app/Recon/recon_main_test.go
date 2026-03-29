@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-const testRepoRootEnv = "INFERMAL_REPO_ROOT"
+const testRepoRootEnv = "DIBs_REPO_ROOT"
 
 func TestMain(m *testing.M) {
 	if err := setTestRepoRootEnv(); err != nil {

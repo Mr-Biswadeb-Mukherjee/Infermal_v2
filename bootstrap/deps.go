@@ -6,11 +6,11 @@ package bootstrap
 import (
 	"errors"
 
-	app "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app"
-	config "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/config"
-	cooldown "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/cooldown"
-	logger "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/logger"
-	redis "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/redis"
+	app "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app"
+	config "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/config"
+	cooldown "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/cooldown"
+	logger "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/logger"
+	redis "github.com/Mr-Biswadeb-Mukherjee/DIBs/core/redis"
 )
 
 type cooldownFactoryAdapter struct{}

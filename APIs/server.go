@@ -129,7 +129,7 @@ func extractAPIKey(r *http.Request, header string) string {
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":      "ok",
-		"service":     "infermal-api",
+		"service":     "dibs-api",
 		"version":     "v3",
 		"auth_header": s.apiKeyHeader,
 		"auth_mode":   "public_key",

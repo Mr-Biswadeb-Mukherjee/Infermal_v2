@@ -10,9 +10,9 @@ import (
 	"strings"
 	"unicode"
 
-	charalg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon/Mutation/character"
-	hashalg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon/Mutation/hashchain"
-	seedalg "github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/Engine/app/Recon/Mutation/seed"
+	charalg "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon/Mutation/character"
+	hashalg "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon/Mutation/hashchain"
+	seedalg "github.com/Mr-Biswadeb-Mukherjee/DIBs/Engine/app/Recon/Mutation/seed"
 )
 
 func sanitizeKeyword(value string) string {

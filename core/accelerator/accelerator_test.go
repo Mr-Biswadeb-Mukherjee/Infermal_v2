@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/accelerator"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/core/accelerator"
 	"github.com/stretchr/testify/assert"
 )
 

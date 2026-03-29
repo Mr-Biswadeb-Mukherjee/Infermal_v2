@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Mr-Biswadeb-Mukherjee/Infermal_v2/core/ui"
+	"github.com/Mr-Biswadeb-Mukherjee/DIBs/core/ui"
 	// Update if your module path differs
 )
 

@@ -13,7 +13,7 @@ import (
 
 const (
 	intelQueueKey    = "dns:intel:queue"
-	intelStopMarker  = "__infermal_dns_intel_stop__"
+	intelStopMarker  = "__dibs_dns_intel_stop__"
 	intelQueueTTL    = 20 * time.Minute
 	intelQueueWait   = 1 * time.Second
 	intelQueueIOTime = 400 * time.Millisecond

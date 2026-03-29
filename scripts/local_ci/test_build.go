@@ -118,7 +118,7 @@ func runBuildStage() error {
 		return err
 	}
 	for _, t := range targets {
-		name := fmt.Sprintf("infermal-%s-%s%s", t.goos, t.goarch, t.suffix)
+		name := fmt.Sprintf("dibs-%s-%s%s", t.goos, t.goarch, t.suffix)
 		env := []string{"GOOS=" + t.goos, "GOARCH=" + t.goarch, "CGO_ENABLED=0"}
 		if _, err := runCmdWithEnv(10*time.Minute, env, "go", "build", "-trimpath", "-ldflags=-s -w", "-o", filepath.Join("dist", name), "./main.go"); err != nil {
 			return err

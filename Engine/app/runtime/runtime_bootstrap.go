@@ -49,7 +49,7 @@ func newAppRuntime(deps Dependencies) (*appRuntime, error) {
 		return nil, err
 	}
 
-	startedAt := deps.Startup.Start("Starting Infermal_v2 Engine")
+	startedAt := deps.Startup.Start("Starting DIBS Engine")
 	rt := &appRuntime{
 		cfg:         deps.Config,
 		paths:       deps.Paths,
