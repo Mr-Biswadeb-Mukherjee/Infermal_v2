@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biswadeb Mukherjee
 
+// SPDX-License-Identifier: Apache-2.0
+
 package adaptive
 
 import (
@@ -94,21 +96,6 @@ func DefaultConfig(initialRate int64, initialTimeout time.Duration, workers int6
 }
 
 func NewController(cfg Config) *Controller {
-	cfg.InitialRate = clampInt64(cfg.InitialRate, 1, maxInt64(cfg.MaxRate, 1))
-	cfg.MinRate = clampInt64(cfg.MinRate, 1, cfg.InitialRate)
-	cfg.MaxRate = maxInt64(cfg.MaxRate, cfg.InitialRate)
-	cfg.MinTimeout = clampDuration(cfg.MinTimeout, 500*time.Millisecond, cfg.MaxTimeout)
-	cfg.MaxTimeout = maxDuration(cfg.MaxTimeout, cfg.MinTimeout)
-	cfg.InitialTimeout = clampDuration(cfg.InitialTimeout, cfg.MinTimeout, cfg.MaxTimeout)
-	cfg.TargetLatency = maxDuration(cfg.TargetLatency, 200*time.Millisecond)
-	cfg.EvalInterval = maxDuration(cfg.EvalInterval, 200*time.Millisecond)
-	cfg.CooldownMin = maxDuration(cfg.CooldownMin, 1*time.Second)
-	cfg.CooldownMax = maxDuration(cfg.CooldownMax, cfg.CooldownMin)
-	cfg.CooldownMinGap = maxDuration(cfg.CooldownMinGap, 1*time.Second)
-	if cfg.StallTickTrigger < 2 {
-		cfg.StallTickTrigger = 2
-	}
-
 	return &Controller{
 		cfg:         cfg,
 		rateLimit:   cfg.InitialRate,
@@ -127,6 +114,7 @@ func (c *Controller) ObserveTask(latency time.Duration, pressureErr bool) {
 
 	c.window.tasks++
 	c.window.latencyNanos += latency.Nanoseconds()
+
 	if pressureErr {
 		c.window.pressureErrs++
 	}
@@ -157,9 +145,15 @@ func (c *Controller) Evaluate(s Snapshot) Decision {
 	c.updateStallLocked(s)
 
 	pressure := c.pressureLocked(s)
-	rate := c.tuneRateLocked(pressure)
+	rate := c.tuneRateLocked(s, pressure)
 	timeout := c.tuneTimeoutLocked(pressure)
 	cooldown := c.cooldownLocked(pressure)
+
+	// 🔥 cooldown forces rate reduction
+	if cooldown > 0 {
+		rate = maxInt64(rate/2, c.cfg.MinRate)
+		c.rateLimit = rate
+	}
 
 	return Decision{
 		RateLimit: rate,
