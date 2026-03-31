@@ -1,0 +1,369 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.1.1 Chrome/132.0.6834.210 Electron/34.3.3 Safari/537.36" version="26.1.1">
+  <diagram id="fvC1v4NvZ7e7Vwxv8Zea" name="Page-1">
+    <mxGraphModel dx="1830" dy="1279" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="CnfDE986cfbrWjtAW9Gd-1" value="" style="rounded=1;whiteSpace=wrap;html=1;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" vertex="1" parent="1">
+          <mxGeometry x="-14" y="-10" width="1697" height="1506" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;DIBs — Data Flow Diagram · Part 1 of 2: Bootstrap → Input → Generation → DNS Resolution&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" parent="1" vertex="1">
+          <mxGeometry x="200" y="20" width="1400" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Traces data from API session start → Keywords.csv through domain generation, scoring, validation, SQLite spool and DNS resolution to resolved/unresolved output" style="text;html=1;align=center;verticalAlign=middle;resizable=0;strokeColor=none;fillColor=none;fontSize=10;fontColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="200" y="56" width="1400" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;DFD Notation:&lt;/b&gt;&lt;br/&gt;◇ Ellipse = Process&lt;br/&gt;□ Open rect = Data store / output&lt;br/&gt;◻ Rounded rect dashed = External entity&lt;br/&gt;→ Solid = data flow&lt;br/&gt;- -▶ Dashed = control/feedback flow" style="text;html=1;align=left;verticalAlign=top;resizable=0;strokeColor=#999999;fillColor=#FAFAFA;rounded=1;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1220" width="230" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_client" value="&lt;b&gt;API Client&lt;/b&gt;&lt;br/&gt;POST /api/v3/start&lt;br/&gt;X-API-Key header" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;dashed=1;dashPattern=8 4;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="30" y="90" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_api" value="&lt;b&gt;P0a · HTTP API Server&lt;/b&gt;&lt;br/&gt;127.0.0.1:9090&lt;br/&gt;NewRouter() · CORS&lt;br/&gt;Routes: health/start/stop/status/metrics/events/details" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="260" y="82" width="230" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p_apikey" value="&lt;b&gt;P0b · API Key Auth&lt;/b&gt;&lt;br/&gt;ed25519 verify&lt;br/&gt;LoadOrCreateAPIKeyPair()&lt;br/&gt;X-API-Key header" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="560" y="82" width="200" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p_apirl" value="&lt;b&gt;P0c · API Rate Limiter&lt;/b&gt;&lt;br/&gt;EndpointRateLimiter&lt;br/&gt;Redis sliding window&lt;br/&gt;Per-route: /s + /min limits" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="830" y="82" width="200" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p_session" value="&lt;b&gt;P0d · Session Manager&lt;/b&gt;&lt;br/&gt;StartSession() / StopSession()&lt;br/&gt;Status: starting→running→stopped/completed/failed&lt;br/&gt;Context cancel · goroutine lifecycle" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1110" y="82" width="230" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="p_boot" value="&lt;b&gt;P0e · Bootstrap&lt;/b&gt;&lt;br/&gt;BuildEngineDependencies()&lt;br/&gt;go mod download · Redis setup&lt;br/&gt;Asset extraction · Config load" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1420" y="82" width="200" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="d_setting" value="D0 · Setting/setting.conf&lt;br/&gt;rate_limit · dns_timeout_ms · TLD tiers&lt;br/&gt;resolve_interval_hours · mutation flags" style="shape=mxgraph.flowchart.start_2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1440" y="190" width="185" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d_redis_api" value="D1 · Redis (API)&lt;br/&gt;api:route:&lt;name&gt;:s/m counter keys&lt;br/&gt;Sliding window · TTL 1s / 60s" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1050" y="190" width="195" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ext_client" target="p_api" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1l" value="HTTP request + API key" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="200" y="105" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_api" target="p_apikey" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_apikey" target="p_apirl" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_apirl" target="p_session" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_session" target="p_boot" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_apirl" target="d_redis_api" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_boot" target="d_setting" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_op" value="&lt;b&gt;Operator&lt;/b&gt;&lt;br/&gt;Provides keywords" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;dashed=1;dashPattern=8 4;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="30" y="290" width="130" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="d_keywords" value="D2 · Engine/Input/Keywords.csv&lt;br/&gt;bootstrap/assets embedded copy" style="shape=mxgraph.flowchart.start_2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="240" y="285" width="220" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="&lt;b&gt;P1 · CSV Reader&lt;/b&gt;&lt;br/&gt;GenerateScoredDomains()&lt;br/&gt;StreamScoredDomains()&lt;br/&gt;Reads keyword rows" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="540" y="278" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ext_op" target="d_keywords" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8l" value="keywords list" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="165" y="300" width="75" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="d_keywords" target="p1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9l" value="raw rows" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="464" y="300" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p_boot" target="p1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10l" value="engine start" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="900" y="220" width="70" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p2a" value="&lt;b&gt;P2a · DGA Engine&lt;/b&gt;&lt;br/&gt;Bitsquatting · Typosquatting&lt;br/&gt;Combosquatting · Homograph&lt;br/&gt;Phonetic · Subdomain squat&lt;br/&gt;TLD tiers: india, global, emerging" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="200" y="420" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="&lt;b&gt;P3 · Collector &amp; Deduplicator&lt;/b&gt;&lt;br/&gt;collectCandidates()&lt;br/&gt;map[domain]candidateMeta&lt;br/&gt;Merge mutation + DGA flags" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="560" y="420" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2b" value="&lt;b&gt;P2b · Mutation Engine&lt;/b&gt;&lt;br/&gt;Character substitution&lt;br/&gt;Seed-based permutation&lt;br/&gt;Hash-chain mutation&lt;br/&gt;Jaro-Winkler similarity" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="930" y="420" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p1" target="p2a" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11l" value="keyword tokens" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="300" y="370" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p1" target="p3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p1" target="p2b" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13l" value="keyword tokens" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="820" y="370" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p2a" target="p3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14l" value="DGA candidates" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="420" y="450" width="85" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p2b" target="p3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15l" value="mutation candidates" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="780" y="450" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="&lt;b&gt;P4 · Validator&lt;/b&gt;&lt;br/&gt;validateCandidates()&lt;br/&gt;RFC format · length ≤253&lt;br/&gt;Label rules · TLD ≥2 chars&lt;br/&gt;Entropy filter · Dedup" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="560" y="575" width="210" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p3" target="p4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16l" value="raw candidate map" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="610" y="505" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="&lt;b&gt;P5 · Risk Scorer&lt;/b&gt;&lt;br/&gt;scoreCandidates()&lt;br/&gt;Shannon entropy · base risk&lt;br/&gt;Lexical + algo boost · [0.05, 0.99]&lt;br/&gt;Confidence: high/medium/low" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="430" y="730" width="210" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p5b" value="&lt;b&gt;P5b · Human-like Filter&lt;/b&gt;&lt;br/&gt;filterHumanLikeCandidates()&lt;br/&gt;Entropy &gt; 1.10 threshold&lt;br/&gt;Drop gibberish domains" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="800" y="730" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p4" target="p5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17l" value="valid candidates" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="530" y="665" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p5" target="p5b" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18l" value="scored list" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="645" y="775" width="65" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="d_spool" value="D3 · SQLite Spool&lt;br/&gt;generated_domains.spool.sqlite3&lt;br/&gt;keyword signature · done/queued flags&lt;br/&gt;resolve_interval_hours · resume support" style="shape=mxgraph.flowchart.start_2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="390" y="885" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_spool" value="&lt;b&gt;P6 · Spool Manager&lt;/b&gt;&lt;br/&gt;streamGeneratedDomainsToSpool()&lt;br/&gt;ensureDataset() · prepareRun()&lt;br/&gt;Batch insert 1000 · Batch read 200&lt;br/&gt;Signature check → re-seed if changed" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="680" y="875" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d_genqueue" value="D4 · Redis · dns:generated:queue&lt;br/&gt;LPUSH scored domains · BLPOP consumer&lt;br/&gt;meta:&lt;domain&gt; HSET risk_score/confidence/generated_by&lt;br/&gt;TTL 48h" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="980" y="880" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p5b" target="p_spool" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19l" value="all scored domains" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="820" y="830" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_spool" target="d_spool" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20l" value="persist + dedup" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="570" y="900" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_spool" target="d_genqueue" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21l" value="domain + meta → Redis queue" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="860" y="900" width="130" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="d_spool" target="p_spool" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22l" value="resume if interval not elapsed" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="390" y="955" width="150" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p7" value="&lt;b&gt;P7 · Cache Lookup&lt;/b&gt;&lt;br/&gt;readDomainCache()&lt;br/&gt;100ms timeout&lt;br/&gt;HIT → skip resolve" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1040" width="185" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6t" value="&lt;b&gt;P8 · Task Submitter&lt;/b&gt;&lt;br/&gt;makeDomainTask()&lt;br/&gt;Worker pool · NumCPU×4&lt;br/&gt;Priority queue L/M/H&lt;br/&gt;Atomic counters: submitted/active" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="500" y="1035" width="215" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p_tuner" value="&lt;b&gt;Runtime Tuner&lt;/b&gt;&lt;br/&gt;Adaptive controller&lt;br/&gt;Latency/pressure feedback&lt;br/&gt;Emit: timeout · rate · cooldown&lt;br/&gt;QPS history writer (1s tick)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="830" y="1030" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d_redis_cache" value="D5 · Redis Cache&lt;br/&gt;dns:&lt;domain&gt; key · TTL-based&lt;br/&gt;OK=1 → TTL 48h · FAIL=0 → TTL 10s" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1130" y="1045" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="d_genqueue" target="p7" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23l" value="domain list" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="290" y="990" width="70" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p7" target="p6t" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24l" value="MISS → proceed" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="375" y="1058" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p6t" target="p_tuner" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25l" value="new max-hits · token bucket" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="720" y="1055" width="120" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p_tuner" target="d_redis_cache" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p8" value="&lt;b&gt;P9 · Cooldown Gate&lt;/b&gt;&lt;br/&gt;waitForCooldown()&lt;br/&gt;cdm.Gate() channel&lt;br/&gt;Blocks if active" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1185" width="185" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p9" value="&lt;b&gt;P10 · Rate Limiter&lt;/b&gt;&lt;br/&gt;waitForRateLimit()&lt;br/&gt;RateLimit(ctx, dns-rate)&lt;br/&gt;10ms retry sleep&lt;br/&gt;Redis token bucket" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="460" y="1182" width="200" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="p10" value="&lt;b&gt;P11 · DNS Resolve&lt;/b&gt;&lt;br/&gt;resolveDomain()&lt;br/&gt;Timeout from tuner&lt;br/&gt;Recursive → fallback stub&lt;br/&gt;Upstream 9.9.9.9 · Backup 1.1.1.1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="740" y="1182" width="200" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_dns" value="&lt;b&gt;DNS Infrastructure&lt;/b&gt;&lt;br/&gt;Upstream + backup resolvers&lt;br/&gt;Public authoritative servers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;dashed=1;dashPattern=8 4;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1040" y="1190" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p6t" target="p8" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e27l" value="gatok/fail + domain" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="280" y="1145" width="110" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p8" target="p9" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28l" value="allowed" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="395" y="1212" width="55" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p9" target="p10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e29l" value="allowed" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="670" y="1210" width="55" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p10" target="ext_dns" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30l" value="DNS query" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="950" y="1220" width="70" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ext_dns" target="p10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31l" value="DNS response" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="950" y="1240" width="80" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p_tuner" target="p10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32l" value="lat/timeout/err" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="830" y="1130" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="p11" value="&lt;b&gt;P12 · Cache Write&lt;/b&gt;&lt;br/&gt;writeCache()&lt;br/&gt;OK → dns:d=1 · TTL 48h&lt;br/&gt;FAIL → dns:d=0 · TTL 10s" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1340" width="185" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="out_resolved" value="&lt;b&gt;Resolved Domain&lt;/b&gt;&lt;br/&gt;String → intelPipe.EnqueueResolved()&lt;br/&gt;→ Part 2: Intel pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="560" y="1345" width="220" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="out_unresolved" value="&lt;b&gt;Unresolved Domain&lt;/b&gt;&lt;br/&gt;intelPipe.WriteUnresolved()&lt;br/&gt;→ Output/Generated_Domain.ndjson (no intel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="900" y="1345" width="260" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p10" target="p11" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e33l" value="ok=true" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="385" y="1305" width="50" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p10" target="out_resolved" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34l" value="ok=true" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="680" y="1305" width="50" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p10" target="out_unresolved" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35l" value="ok=false" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="940" y="1305" width="55" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e36" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p11" target="d_redis_cache" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e37" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p7" target="out_resolved" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="1080" />
+              <mxPoint x="150" y="1380" />
+              <mxPoint x="560" y="1380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e37l" value="HIT → skip resolve" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1230" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="e38" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p_tuner" target="p8" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="930" y="1090" />
+              <mxPoint x="290" y="1090" />
+              <mxPoint x="290" y="1185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e38l" value="trigger cooldown" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="400" y="1093" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="d_metrics" value="D6 · Output/Run_Metrics.ndjson&lt;br/&gt;Output/Metrics_History_&lt;ts&gt;.ndjson&lt;br/&gt;QPS · duration · resolved_total · CPU/RAM%" style="shape=mxgraph.flowchart.start_2;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1380" y="1030" width="250" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e39" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_tuner" target="d_metrics" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e39l" value="QPS history (1s tick)" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1230" y="1040" width="110" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="d_out_gen" value="D7 · Output/Generated_Domain.ndjson&lt;br/&gt;All permuted domains · risk score · confidence · generated_by" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1280" y="1345" width="270" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e40" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="out_unresolved" target="d_out_gen" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p_apistatus" value="&lt;b&gt;API Status/Metrics/Details&lt;/b&gt;&lt;br/&gt;GET /api/v3/status · /metrics · /details&lt;br/&gt;GET /api/v3/events.ndjson (streaming)&lt;br/&gt;DetailsService reads Output/*.ndjson" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1370" y="253" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e41" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="p_session" target="p_apistatus" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e42" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="d_metrics" target="p_apistatus" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1505" y="1030" />
+              <mxPoint x="1505" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e43" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p_apistatus" target="ext_client" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1490" y="220" />
+              <mxPoint x="110" y="220" />
+              <mxPoint x="110" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e43l" value="JSON response" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="500" y="195" width="80" height="15" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

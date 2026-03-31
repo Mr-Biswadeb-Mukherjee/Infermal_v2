@@ -1,0 +1,364 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.1.1 Chrome/132.0.6834.210 Electron/34.3.3 Safari/537.36" version="26.1.1">
+  <diagram id="LKClRTUKZ5xKaHfcwk92" name="Page-1">
+    <mxGraphModel dx="1830" dy="1279" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2000" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Hw-_kZsXFxP6uqLUnbMM-1" value="" style="rounded=1;whiteSpace=wrap;html=1;movable=0;resizable=0;rotatable=0;deletable=0;editable=0;locked=1;connectable=0;" vertex="1" parent="1">
+          <mxGeometry x="-51" y="-17" width="1799" height="1781" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;DIBs — System Architecture Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;strokeColor=none;fillColor=none;fontSize=20;" parent="1" vertex="1">
+          <mxGeometry x="400" y="-11" width="1200" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Domain Intelligence &amp;amp; DNS Behavior Analysis Framework" style="text;html=1;align=center;verticalAlign=middle;resizable=0;strokeColor=none;fillColor=none;fontSize=11;fontColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="397" y="25" width="1200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1559" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="API / Bootstrap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1598" width="120" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Recon / Generation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="165" y="1598" width="130" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="Runtime / Orchestration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="310" y="1598" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="Intel Pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="475" y="1598" width="110" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" value="Output / Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="600" y="1598" width="120" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6" value="Infrastructure / Bootstrap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="738" y="1598" width="160" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="main" value="&lt;b&gt;main.go&lt;/b&gt;&lt;br/&gt;Entry point · run()&lt;br/&gt;loadAPIKeyPair() · buildEngineRuntime()&lt;br/&gt;serveUntilShutdown() · SIGTERM handler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="800" y="82" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="config" value="&lt;b&gt;Config Loader&lt;/b&gt;&lt;br/&gt;Setting/setting.conf&lt;br/&gt;TLD tiers · mutation flags&lt;br/&gt;rate_limit · dns_timeout_ms&lt;br/&gt;resolve_interval_hours" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="210" y="82" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="redis_client" value="&lt;b&gt;Redis Client&lt;/b&gt;&lt;br/&gt;Cache + task queue · redis.Init()&lt;br/&gt;Setting/redis.yaml&lt;br/&gt;Cluster / standalone modes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="800" y="170" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" value="&lt;b&gt;UI / Logger&lt;/b&gt;&lt;br/&gt;Spinner · banner · NDJSON logs&lt;br/&gt;EndBanner(startTime, total, resolved)&lt;br/&gt;Live progress rows (atomic counters)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1430" y="82" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="em1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" parent="1" source="main" target="config" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="main" target="redis_client" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em3" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" parent="1" source="redis_client" target="ui" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em3l" value="cache ops" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="180" width="60" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="api_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" parent="1" vertex="1">
+          <mxGeometry x="30" y="270" width="1600" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="api_label" value="&lt;b&gt;API Module — APIs/ package&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="40" y="275" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="api_server" value="&lt;b&gt;HTTP API Server&lt;/b&gt;&lt;br/&gt;127.0.0.1:9090&lt;br/&gt;NewRouter() · withCORS()&lt;br/&gt;ReadHeaderTimeout 10s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="300" width="180" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api_auth" value="&lt;b&gt;API Key Auth&lt;/b&gt;&lt;br/&gt;ed25519 · LoadOrCreateAPIKeyPair()&lt;br/&gt;DIBS_API_PRIVATE_KEY env&lt;br/&gt;Setting/api_private.key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="265" y="300" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api_rl" value="&lt;b&gt;Endpoint Rate Limiter&lt;/b&gt;&lt;br/&gt;Redis sliding window per route&lt;br/&gt;/start: 2/s 20/min · /status: 10/s&lt;br/&gt;/events: 4/s · /details: 4/s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="510" y="300" width="220" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api_session" value="&lt;b&gt;Session Manager&lt;/b&gt;&lt;br/&gt;StartSession() / StopSession()&lt;br/&gt;States: starting→running→stopping→stopped/completed/failed&lt;br/&gt;Context cancel · goroutine lifecycle · IST timestamps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="770" y="300" width="280" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api_contract" value="&lt;b&gt;Endpoint Contract&lt;/b&gt;&lt;br/&gt;APIs/Endpoint.ndjson (embedded)&lt;br/&gt;Routes: health/start/stop/status/metrics/events/details&lt;br/&gt;NDJSON contract · policy validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="300" width="260" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="api_details" value="&lt;b&gt;Details Service&lt;/b&gt;&lt;br/&gt;Fetch(sections, limit)&lt;br/&gt;Reads Output/*.ndjson tail&lt;br/&gt;Sections: session/metrics/generated/resolved/dns_intel/run_metrics/qps_history" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1400" y="300" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="ea1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="main" target="api_server" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ea2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_server" target="api_auth" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ea3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_auth" target="api_rl" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ea4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_rl" target="api_session" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ea5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_contract" target="api_server" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ea6" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_details" target="api_server" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="boot_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;opacity=30;" parent="1" vertex="1">
+          <mxGeometry x="30" y="470" width="700" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="boot_label" value="&lt;b&gt;Bootstrap — bootstrap/ package&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="40" y="475" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="boot_deps" value="&lt;b&gt;BuildEngineDependencies()&lt;/b&gt;&lt;br/&gt;go mod download · Redis install/start&lt;br/&gt;Assets extraction (Keywords.csv, setting.conf)&lt;br/&gt;Adaptive limiter · Worker writers setup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="500" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="boot_paths" value="&lt;b&gt;Paths&lt;/b&gt;&lt;br/&gt;Engine/Input/Keywords.csv&lt;br/&gt;Output/{DNS_Intel,Generated_Domain,&lt;br/&gt;Resolved_Domain,Run_Metrics,ASN_Cluster}.ndjson" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="380" y="500" width="320" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="eb1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="api_session" target="boot_deps" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb1l" value="RuntimeFactory()" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="500" y="398" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="recon_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" parent="1" vertex="1">
+          <mxGeometry x="30" y="610" width="1600" height="195" as="geometry" />
+        </mxCell>
+        <mxCell id="recon_label" value="&lt;b&gt;Recon Module — Engine/app/Recon/&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="40" y="615" width="350" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_gen" value="&lt;b&gt;Domain Generator&lt;/b&gt;&lt;br/&gt;Input/Keywords.csv → scored list&lt;br/&gt;Shannon entropy · risk scoring&lt;br/&gt;Confidence: high/medium/low&lt;br/&gt;StreamScoredDomains() / GenerateScoredDomains()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="645" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="dga_engine" value="&lt;b&gt;DGA Engine&lt;/b&gt;&lt;br/&gt;Bitsquatting · Typosquatting&lt;br/&gt;Combosquatting · Homograph&lt;br/&gt;Phonetic · Subdomain squat&lt;br/&gt;TLD tiers: india / global / emerging" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="320" y="645" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="mut_engine" value="&lt;b&gt;Mutation Engine&lt;/b&gt;&lt;br/&gt;Character mutations (Mutation/character/)&lt;br/&gt;Seed-based (Mutation/seed/)&lt;br/&gt;Hash-chain (Mutation/hashchain/)&lt;br/&gt;Jaro-Winkler similarity · Mutation TLDs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="595" y="645" width="250" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="validator" value="&lt;b&gt;Validator&lt;/b&gt;&lt;br/&gt;RFC format · TLD check · length≤253&lt;br/&gt;Entropy filter · Dedup&lt;br/&gt;Human-likeness filter (entropy&gt;1.10)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="895" y="645" width="230" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="risk_scorer" value="&lt;b&gt;Risk Scorer&lt;/b&gt;&lt;br/&gt;Shannon entropy · base risk&lt;br/&gt;Lexical + algo boost&lt;br/&gt;Score range [0.05, 0.99]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1175" y="645" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="dns_res_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=60;" parent="1" vertex="1">
+          <mxGeometry x="1420" y="640" width="190" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="dns_res" value="&lt;b&gt;DNS Resolver Engine&lt;/b&gt;&lt;br/&gt;Engine/app/DNS/&lt;br/&gt;rResolver (recursive)&lt;br/&gt;sResolver (stub)&lt;br/&gt;Upstream 9.9.9.9 · Backup 1.1.1.1&lt;br/&gt;CNAME/MX/TXT/SOA · Fallback chain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1430" y="650" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="er1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="domain_gen" target="dga_engine" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="domain_gen" target="mut_engine" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="dga_engine" target="validator" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="mut_engine" target="validator" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="validator" target="risk_scorer" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er6" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" parent="1" source="boot_deps" target="domain_gen" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="er6l" value="rate token" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="165" y="590" width="70" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="spool_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=40;" parent="1" vertex="1">
+          <mxGeometry x="30" y="825" width="700" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="spool_label" value="&lt;b&gt;SQLite Spool — Engine/app/runtime/ (generatedDomainSpool)&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="40" y="830" width="500" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="spool_db" value="&lt;b&gt;generated_domains.spool.sqlite3&lt;/b&gt;&lt;br/&gt;Keyword signature · done/queued flags&lt;br/&gt;Batch insert 1000 · Batch read 200&lt;br/&gt;Re-seed if keyword fingerprint changes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="858" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="spool_mgr" value="&lt;b&gt;Spool Manager&lt;/b&gt;&lt;br/&gt;ensureDataset() · prepareRun()&lt;br/&gt;syncDatasetSignature()&lt;br/&gt;resolve_interval_hours skip logic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="380" y="858" width="310" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="es1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="risk_scorer" target="spool_mgr" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="es1l" value="scored domains" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="900" y="770" width="90" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="es2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="spool_mgr" target="spool_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=30;" parent="1" vertex="1">
+          <mxGeometry x="30" y="965" width="1600" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime_label" value="&lt;b&gt;Runtime Orchestration — Engine/app/runtime/ (app.go + runtime_*.go)&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="40" y="970" width="600" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="worker_pool" value="&lt;b&gt;Worker Pool&lt;/b&gt;&lt;br/&gt;NumCPU×4 goroutines&lt;br/&gt;Priority queue L/M/H&lt;br/&gt;Dedup · Round-robin&lt;br/&gt;Exec callbacks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="1000" width="185" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rate_limiter" value="&lt;b&gt;Rate Limiter&lt;/b&gt;&lt;br/&gt;Redis-backed token bucket&lt;br/&gt;Adaptive max-hits&lt;br/&gt;Cooldown gate&lt;br/&gt;10ms retry sleep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="270" y="1000" width="185" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime_tuner" value="&lt;b&gt;Runtime Tuner&lt;/b&gt;&lt;br/&gt;Adaptive controller&lt;br/&gt;Latency/pressure feedback&lt;br/&gt;Auto-scale workers&lt;br/&gt;QPS history (1s tick · CPU/RAM%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="495" y="1000" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cooldown_mgr" value="&lt;b&gt;Cooldown Manager&lt;/b&gt;&lt;br/&gt;Back-pressure gate&lt;br/&gt;Context-aware blocking&lt;br/&gt;StartWatcher()&lt;br/&gt;cdm.Gate() channel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="740" y="1000" width="185" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="domain_cache" value="&lt;b&gt;Domain Cache&lt;/b&gt;&lt;br/&gt;Redis dns:&lt;domain&gt; key&lt;br/&gt;Success TTL 48h · Fail 10s&lt;br/&gt;100ms read timeout&lt;br/&gt;HIT → skip DNS resolve" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="975" y="1000" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics_writer" value="&lt;b&gt;Metrics / QPS History Writer&lt;/b&gt;&lt;br/&gt;Run_Metrics.ndjson · Metrics_History_&lt;ts&gt;.ndjson&lt;br/&gt;qpsHistoryRecord: elapsed/resolve_qps/intel_qps/cpu/ram&lt;br/&gt;1s tick · runMetricsRecord at finish" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1230" y="1000" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="live_progress" value="&lt;b&gt;Live Progress&lt;/b&gt;&lt;br/&gt;Generated / Resolved / Intel rows&lt;br/&gt;Atomic counters · CLI rows&lt;br/&gt;progressBar · spinner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="1000" width="65" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ert1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="worker_pool" target="rate_limiter" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="rate_limiter" target="runtime_tuner" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="runtime_tuner" target="cooldown_mgr" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="cooldown_mgr" target="domain_cache" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="runtime_tuner" target="metrics_writer" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert6" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="spool_mgr" target="worker_pool" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ert6l" value="domain batch (200)" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="90" y="945" width="110" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="ert7" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="metrics_writer" target="live_progress" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="intel_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;opacity=40;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1205" width="1600" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="intel_label" value="&lt;b&gt;Intel Pipeline — Engine/app/intel/ + runtime_intel.go&lt;/b&gt;" style="text;html=1;align=left;strokeColor=none;fillColor=none;fontSize=11;fontStyle=1;fontColor=#d6b656;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1210" width="500" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="intel_queue" value="&lt;b&gt;Intel Queue&lt;/b&gt;&lt;br/&gt;Redis BLPOP consumer&lt;br/&gt;dns:intel:queue key · 20min TTL&lt;br/&gt;Stop token: __dibs_dns_intel_stop__&lt;br/&gt;intelQueueWait 1s · IOTime 400ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="50" y="1240" width="235" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="dns_intel_proc" value="&lt;b&gt;DNS Intel Processor&lt;/b&gt;&lt;br/&gt;Parallel A/AAAA/CNAME/NS/MX/TXT&lt;br/&gt;6 goroutines per domain&lt;br/&gt;WHOIS: RegistrarWhoisServer / CreationDate&lt;br/&gt;DNSSEC flag · TTL field" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="330" y="1240" width="265" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="enrichment" value="&lt;b&gt;Enrichment&lt;/b&gt;&lt;br/&gt;ASN lookup (DefaultASNLookup)&lt;br/&gt;Provider extraction (publicsuffix)&lt;br/&gt;CNAME chain mapping&lt;br/&gt;Sanitize / dedup / trim all fields" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="645" y="1240" width="250" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="asn_cluster" value="&lt;b&gt;ASN Cluster Index (NEW)&lt;/b&gt;&lt;br/&gt;asnClusterIndex.add()&lt;br/&gt;Group domains by ASN/Prefix&lt;br/&gt;clusterNDJSONRecord: asn·ip·prefix·as_name&lt;br/&gt;domains[]·cluster_size·timestamp_ist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="945" y="1240" width="255" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="intel_cache" value="&lt;b&gt;Intel Cache&lt;/b&gt;&lt;br/&gt;resolvedSeen sync.Map&lt;br/&gt;In-memory per pipeline run&lt;br/&gt;Dedup per domain&lt;br/&gt;HIT → emit directly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1260" y="1240" width="200" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="ndjson_writer" value="&lt;b&gt;NDJSON File Writer (core/filewriter/)&lt;/b&gt;&lt;br/&gt;Buffered I/O · atomic flush · filewriter + ndjson_writer · Writers: intel / domain / resolved / cluster / run_metrics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#d6b656;fontSize=9;" parent="1" vertex="1">
+          <mxGeometry x="1510" y="1255" width="105" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="ei1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="intel_queue" target="dns_intel_proc" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="dns_intel_proc" target="enrichment" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="enrichment" target="asn_cluster" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="asn_cluster" target="intel_cache" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="intel_cache" target="ndjson_writer" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei6" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="domain_cache" target="intel_queue" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ei6l" value="resolved → RPUSH" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="700" y="1110" width="100" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="out_gen" value="&lt;b&gt;Output/Generated_Domain.ndjson&lt;/b&gt;&lt;br/&gt;All permuted domains · risk score · confidence · generated_by · resolution" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="30" y="1430" width="340" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="out_intel" value="&lt;b&gt;Output/DNS_Intel.ndjson&lt;/b&gt;&lt;br/&gt;A/AAAA/CNAME/NS/MX/TXT · ASN · providers · DNSSEC · TTL · WHOIS · timestamp_ist" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="410" y="1430" width="370" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="out_res" value="&lt;b&gt;Output/Resolved_Domain.ndjson (NEW)&lt;/b&gt;&lt;br/&gt;domain · score · confidence · generated_by · resolved=true" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="820" y="1430" width="330" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="out_cluster" value="&lt;b&gt;Output/ASN_Cluster.ndjson (NEW)&lt;/b&gt;&lt;br/&gt;ASN · IP · Prefix · AS Name · domains[] · cluster_size" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1190" y="1430" width="300" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="out_metrics" value="&lt;b&gt;Output/Run_Metrics.ndjson&lt;/b&gt;&lt;br/&gt;&amp; Metrics_History_&lt;ts&gt;.ndjson&lt;br/&gt;QPS · duration · CPU% · RAM MB" style="shape=mxgraph.flowchart.start_2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;whiteSpace=wrap;" parent="1" vertex="1">
+          <mxGeometry x="1530" y="1430" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="eo1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ndjson_writer" target="out_gen" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1562" y="1400" />
+              <mxPoint x="200" y="1400" />
+              <mxPoint x="200" y="1430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eo2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ndjson_writer" target="out_intel" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1562" y="1405" />
+              <mxPoint x="595" y="1405" />
+              <mxPoint x="595" y="1430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eo3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ndjson_writer" target="out_res" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1562" y="1410" />
+              <mxPoint x="985" y="1410" />
+              <mxPoint x="985" y="1430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eo4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="ndjson_writer" target="out_cluster" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eo5" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="metrics_writer" target="out_metrics" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="consumers" value="&lt;b&gt;Downstream Consumers&lt;/b&gt;&lt;br/&gt;SIEM · Threat intel platforms · Data pipelines · Visualization tools&lt;br/&gt;API: /details?sections=generated,resolved,dns_intel · /events.ndjson" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=9;dashed=1;dashPattern=8 4;" parent="1" vertex="1">
+          <mxGeometry x="410" y="1510" width="620" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="eco1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="out_gen" target="consumers" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eco2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="out_intel" target="consumers" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eco3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="out_res" target="consumers" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eco4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="out_cluster" target="consumers" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eapi1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;" parent="1" source="api_details" target="out_gen" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1505" y="376" />
+              <mxPoint x="1505" y="1470" />
+              <mxPoint x="200" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="eapi1l" value="tail reads (DetailsService)" style="text;fontSize=8;" parent="1" vertex="1">
+          <mxGeometry x="600" y="1450" width="130" height="15" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

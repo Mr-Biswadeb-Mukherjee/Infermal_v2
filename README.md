@@ -1,10 +1,11 @@
+
 <div align="center">
 
 # DIBs
 
 **Domain Intelligence & Behavior System**
 
-*DNS Intelligence & Infrastructure Behavior Analysis Framework*
+*A DNS Intelligence & Infrastructure Behavioral Analysis Framework*
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat-square\&logo=go\&logoColor=white)](https://golang.org/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-2ea44f?style=flat-square\&logo=github-actions\&logoColor=white)](https://github.com/)
@@ -25,40 +26,29 @@
 
 ## Overview
 
-**DIBs** is a modular, high-performance framework for generating, resolving, analyzing, and correlating domain intelligence at scale.
+**DIBs** is a modular framework for generating, resolving, analyzing, and correlating domain intelligence at scale. It is designed for offensive security workflows, threat intelligence operations, and DNS telemetry analysis.
 
-It is built for offensive security workflows, threat intelligence operations, and DNS telemetry analysis.
-
-The system operates as a unified pipeline:
+The system operates as a structured pipeline:
 
 ```
+
 Domain Generation → DNS Resolution → Intelligence Extraction → Correlation → Output
-```
 
-DIBs is designed to be **scalable**, **pipeline-driven**, and **SIEM-ready**, producing structured NDJSON output for downstream systems.
+````
+
+Outputs are emitted as structured NDJSON, enabling integration with SIEM platforms and downstream processing systems.
+
+This work is part of ongoing offensive security research conducted by `Biswadeb Mukherjee and his research lab`.
 
 ---
 
 ## Architecture
 
-DIBs follows a unidirectional processing pipeline with adaptive runtime control.
+DIBs follows a unidirectional processing pipeline with controlled execution stages.
 
 ### High-Level Diagram
 
-> Placeholder — replace with actual architecture diagram
-
-```text
-[ Diagram Placeholder ]
-Domain Generation
-        ↓
-DNS Resolution
-        ↓
-Intelligence Extraction
-        ↓
-Correlation Engine
-        ↓
-NDJSON Output
-```
+![System Architecture Diagram](System_Design/DIBs_SAD.drawio.png)
 
 ---
 
@@ -66,45 +56,45 @@ NDJSON Output
 
 ### Domain Mutation Engine
 
-* Bitsquatting
-* Typosquatting
-* Combosquatting
-* Homograph attacks
-* Phonetic mutations
-* Similarity scoring (Jaro–Winkler)
-* Subdomain permutations
+* Bitsquatting  
+* Typosquatting  
+* Combosquatting  
+* Homograph generation  
+* Phonetic mutations  
+* Similarity scoring (Jaro–Winkler)  
+* Subdomain permutations  
 
-All generated domains are validated, deduplicated, and scored.
+All generated domains are validated, deduplicated, and scored before processing.
 
 ---
 
 ### High-Speed DNS Engine
 
-* Recursive + Stub resolution modes
-* Multi-record support (A, AAAA, CNAME, MX, TXT, SOA)
-* Adaptive timeout and retry logic
-* High-concurrency worker pool
+* Recursive and stub resolution modes  
+* Multi-record support (A, AAAA, CNAME, MX, TXT, SOA)  
+* Adaptive timeout and retry logic  
+* High-concurrency worker execution  
 
 ---
 
 ### Intelligence Extraction
 
-* A / AAAA enumeration
-* CNAME chain mapping
-* Nameserver profiling
-* MX / TXT extraction
-* Provider attribution
-* TTL anomaly detection
-* Fast-flux detection
-* DNSSEC validation
+* A / AAAA enumeration  
+* CNAME chain resolution  
+* Nameserver profiling  
+* MX and TXT record extraction  
+* Provider attribution  
+* TTL anomaly detection  
+* Fast-flux detection  
+* DNSSEC validation  
 
 ---
 
 ### Correlation Engine
 
-* Infrastructure clustering (IP / ASN)
-* Domain relationship mapping
-* Shared infrastructure detection
+* Infrastructure clustering (IP / ASN)  
+* Domain relationship mapping  
+* Shared infrastructure detection  
 
 ---
 
@@ -112,11 +102,11 @@ All generated domains are validated, deduplicated, and scored.
 
 All outputs are NDJSON-based:
 
-* Generated domains
-* Resolved domains
-* DNS intelligence records
-* Infrastructure clusters
-* Runtime metrics
+* Generated domains  
+* Resolved domains  
+* DNS intelligence records  
+* Infrastructure clusters  
+* Runtime metrics  
 
 ---
 
@@ -124,19 +114,19 @@ All outputs are NDJSON-based:
 
 ### Prerequisites
 
-* Go 1.21+
-* Redis 6.0+
-* Linux (recommended)
+* Go 1.21+  
+* Redis 6.0+  
+* Linux (recommended)  
 
 ---
 
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/DIBs.git
+git clone https://github.com/Mr-Biswadeb-Mukherjee/DIBs
 cd DIBs
 go mod tidy
-```
+````
 
 ---
 
@@ -150,7 +140,7 @@ go run .
 
 ## API Control Plane
 
-DIBs exposes an API for scan lifecycle control.
+DIBs exposes an API for managing scan lifecycle and runtime control.
 
 ### Core Endpoints
 
@@ -162,7 +152,7 @@ DIBs exposes an API for scan lifecycle control.
 | /api/v3/status  | GET    |
 | /api/v3/metrics | GET    |
 
-Authentication uses **ed25519 public key validation** via `X-API-Key`.
+Authentication uses **ed25519 public key validation** via the `X-API-Key` header.
 
 ---
 
@@ -177,9 +167,27 @@ Authentication uses **ed25519 public key validation** via `X-API-Key`.
 
 ---
 
+## Citation
+
+If you use this work, please cite:
+
+```bibtex
+@misc{offsec-biswadeb2026.v1,
+  author       = {Mukherjee, Biswadeb},
+  title        = {\DocTitle},
+  year         = {2026},
+  version      = {\DocVersion},
+  url          = {\DocWebsite},
+  howpublished = {\url{https://official-biswadeb941.in}},
+  note         = {\DocType}
+}
+```
+
+---
+
 ## License
 
-Apache License 2.0
+This project is licensed under the Apache License 2.0. See the **[LICENSE](./LICENSE)** file for details.
 
 ---
 
@@ -193,4 +201,8 @@ Offensive Security Specialist · Malware Engineer
 
 <div align="center">
 <sub>Built for operators who need answers, not dashboards.</sub>
+</div>
+
+<div align="center">
+<sub>Copyright 2026 Biswadeb Mukherjee</sub>
 </div>
