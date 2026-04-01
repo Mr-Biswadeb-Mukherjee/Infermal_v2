@@ -197,7 +197,7 @@ func intelRecordToNDJSON(r IntelRecord) intelNDJSONRecord {
 		CreationDate:         r.CreationDate,
 		TTL:                  r.TTL,
 		DNSSEC:               r.DNSSEC,
-		TimestampIST:         formatISTTimestamp(time.Now()),
+		TimestampIST:         formatISTTimestamp(r.Timestamp),
 	}
 }
 

@@ -41,7 +41,7 @@ func loadRuntimePaths() runtimePaths {
 			repo:             repo,
 			engine:           engineDir,
 			logsDir:          filepath.Join(repo, "Logs"),
-			keywordsCSV:      resolveKeywordsPath(repo, engineDir),
+			keywordsCSV:      resolveKeywordsPath(repo),
 			settingConf:      filepath.Join(repo, "Setting", "setting.conf"),
 			redisConf:        filepath.Join(repo, "Setting", "redis.yaml"),
 			dnsIntelOutput:   filepath.Join(outputDir, "DNS_Intel.ndjson"),
@@ -54,15 +54,8 @@ func loadRuntimePaths() runtimePaths {
 	return pathsSet
 }
 
-func resolveKeywordsPath(repo, engineDir string) string {
+func resolveKeywordsPath(repo string) string {
 	preferred := filepath.Join(repo, "Input", "Keywords.csv")
-	if regularFileExists(preferred) {
-		return preferred
-	}
-	legacy := filepath.Join(engineDir, "Input", "Keywords.csv")
-	if regularFileExists(legacy) {
-		return legacy
-	}
 	return preferred
 }
 

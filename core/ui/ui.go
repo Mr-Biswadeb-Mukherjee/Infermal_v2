@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var uiISTLocation = loadUIISTLocation()
+
 func Spinner(stop chan struct{}, label string) {
 	frames := []string{"|", "/", "-", "\\"}
 	i := 0
@@ -28,17 +30,25 @@ func Spinner(stop chan struct{}, label string) {
 }
 
 func StartBanner() time.Time {
-	now := time.Now().Local()
+	now := time.Now().In(uiISTLocation)
 	fmt.Printf("\n[%s] Engine Started\n", now.Format("02-01-06 03:04:05 PM"))
 	return now
 }
 
 // EndBanner prints the stop timestamp and summary stats.
 func EndBanner(start time.Time, total int64, resolved int64) {
-	end := time.Now().Local()
+	end := time.Now().In(uiISTLocation)
 	elapsed := time.Since(start).Truncate(time.Millisecond)
 
 	fmt.Printf("\n[%s] Engine Finished\n", end.Format("02-01-06 03:04:05 PM"))
 	fmt.Printf("✔ Resolution time: %s | Total checked: %d\n", elapsed, total)
 	fmt.Printf("✔ Total resolved: %d\n", resolved)
+}
+
+func loadUIISTLocation() *time.Location {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err == nil {
+		return loc
+	}
+	return time.FixedZone("IST", 5*60*60+30*60)
 }

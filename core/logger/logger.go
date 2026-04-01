@@ -22,6 +22,8 @@ const (
 	defaultBufferSizeKB = 64 * 1024
 )
 
+var loggerISTLocation = loadLoggerISTLocation()
+
 // Logger writes logs asynchronously so workers stay non-blocking.
 type Logger struct {
 	filePath string
@@ -102,7 +104,7 @@ func (l *Logger) writeLog(level, format string, v ...interface{}) {
 		return
 	}
 
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().In(loggerISTLocation).Format("2006-01-02 15:04:05")
 	msg := fmt.Sprintf(format, v...)
 	logLine := fmt.Sprintf("[%s] %s: %s\n", timestamp, level, msg)
 
@@ -192,7 +194,7 @@ func (l *Logger) appendDroppedNotice(batch *[]string) {
 	if n <= 0 {
 		return
 	}
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().In(loggerISTLocation).Format("2006-01-02 15:04:05")
 	line := fmt.Sprintf("[%s] WARNING: dropped %d log messages due backpressure\n", timestamp, n)
 	*batch = append(*batch, line)
 }
@@ -225,8 +227,16 @@ func logFileName(module string) string {
 	if strings.HasSuffix(strings.ToLower(name), ".log") {
 		return name
 	}
-	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	timestamp := time.Now().In(loggerISTLocation).Format("2006-01-02_15-04-05")
 	return fmt.Sprintf("%s_%s.log", name, timestamp)
+}
+
+func loadLoggerISTLocation() *time.Location {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err == nil {
+		return loc
+	}
+	return time.FixedZone("IST", 5*60*60+30*60)
 }
 
 func sanitizeModuleName(module string) string {

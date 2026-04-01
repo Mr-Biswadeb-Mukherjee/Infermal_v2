@@ -35,6 +35,7 @@ type Record struct {
 	CreationDate         string
 	TTL                  int64
 	DNSSEC               bool
+	Timestamp            time.Time
 }
 
 type ASNInfo struct {
@@ -122,6 +123,7 @@ func (s *DNSIntelService) Run(
 			CreationDate:         r.CreationDate,
 			TTL:                  r.TTL,
 			DNSSEC:               r.DNSSEC,
+			Timestamp:            r.Timestamp,
 		})
 	}
 

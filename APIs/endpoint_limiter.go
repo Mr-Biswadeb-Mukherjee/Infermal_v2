@@ -72,7 +72,7 @@ func (l *EndpointRateLimiter) allowWindow(
 	ttl time.Duration,
 ) (bool, error) {
 	route := sanitizeLimiterToken(routeName)
-	stamp := time.Now().UTC()
+	stamp := time.Now().In(apiISTLocation)
 	key := buildRateKey(route, window, stamp)
 	opCtx, cancel := context.WithTimeout(ctx, redisOpTimeout)
 	defer cancel()

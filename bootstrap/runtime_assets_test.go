@@ -61,7 +61,7 @@ func testRuntimePaths(root string) runtimePaths {
 		repo:            root,
 		engine:          engine,
 		logsDir:         filepath.Join(root, "Logs"),
-		keywordsCSV:     filepath.Join(engine, "Input", "Keywords.csv"),
+		keywordsCSV:     filepath.Join(root, "Input", "Keywords.csv"),
 		settingConf:     filepath.Join(setting, "setting.conf"),
 		redisConf:       filepath.Join(setting, "redis.yaml"),
 		dnsIntelOutput:  filepath.Join(output, "DNS_Intel.ndjson"),

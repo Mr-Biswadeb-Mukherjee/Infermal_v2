@@ -40,6 +40,7 @@ type IntelRecord struct {
 	CreationDate         string
 	TTL                  int64
 	DNSSEC               bool
+	Timestamp            time.Time
 }
 
 type IntelASNRecord struct {
@@ -248,6 +249,7 @@ func mapIntelRecords(records []intel.Record) []IntelRecord {
 			CreationDate:         rec.CreationDate,
 			TTL:                  rec.TTL,
 			DNSSEC:               rec.DNSSEC,
+			Timestamp:            rec.Timestamp,
 		})
 	}
 	return out

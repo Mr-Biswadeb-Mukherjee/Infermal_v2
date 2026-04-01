@@ -210,6 +210,7 @@ type IntelRecord struct {
 	CreationDate         string
 	TTL                  int64
 	DNSSEC               bool
+	Timestamp            time.Time
 }
 
 type IntelASNRecord struct {

@@ -251,7 +251,7 @@ func writeSessionEvent(
 	}
 	record := map[string]any{
 		"type":          "session.status",
-		"timestamp_utc": formatAPIISTTimestamp(time.Now()),
+		"timestamp_ist": formatAPIISTTimestamp(time.Now()),
 		"session":       info,
 	}
 	if err := encoder.Encode(record); err != nil {

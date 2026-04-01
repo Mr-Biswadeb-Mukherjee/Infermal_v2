@@ -30,8 +30,8 @@ const (
 type SessionInfo struct {
 	ID        string        `json:"id"`
 	Status    SessionStatus `json:"status"`
-	StartedAt string        `json:"started_at_utc"`
-	EndedAt   string        `json:"ended_at_utc,omitempty"`
+	StartedAt string        `json:"started_at_ist"`
+	EndedAt   string        `json:"ended_at_ist,omitempty"`
 	Error     string        `json:"error,omitempty"`
 }
 
@@ -42,9 +42,10 @@ type Runtime interface {
 type RuntimeFactory func() (Runtime, error)
 
 type sessionRecord struct {
-	info   SessionInfo
-	cancel context.CancelFunc
-	done   chan struct{}
+	runtime Runtime
+	info    SessionInfo
+	cancel  context.CancelFunc
+	done    chan struct{}
 }
 
 type SessionManager struct {
@@ -68,6 +69,11 @@ func (m *SessionManager) StartSession() (SessionInfo, error) {
 		return SessionInfo{}, errors.New("session manager not configured")
 	}
 
+	runtime, err := m.factory()
+	if err != nil {
+		return SessionInfo{}, err
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.hasActiveLocked() {
@@ -77,6 +83,7 @@ func (m *SessionManager) StartSession() (SessionInfo, error) {
 	now := m.now().In(apiISTLocation)
 	ctx, cancel := context.WithCancel(context.Background())
 	rec := &sessionRecord{
+		runtime: runtime,
 		info: SessionInfo{
 			ID:        newSessionID(now),
 			Status:    StatusStarting,
@@ -163,14 +170,13 @@ func (m *SessionManager) Shutdown(timeout time.Duration) {
 
 func (m *SessionManager) runSession(ctx context.Context, rec *sessionRecord) {
 	defer close(rec.done)
-	runtime, err := m.factory()
-	if err != nil {
-		m.finishSession(rec, StatusFailed, err.Error())
+	if rec == nil || rec.runtime == nil {
+		m.finishSession(rec, StatusFailed, "runtime initialization failed")
 		return
 	}
 
 	m.updateCurrentStatus(StatusRunning, "")
-	err = runtime.Run(ctx)
+	err := rec.runtime.Run(ctx)
 	if err == nil {
 		m.finishSession(rec, StatusCompleted, "")
 		return

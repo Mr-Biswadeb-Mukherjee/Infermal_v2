@@ -108,6 +108,7 @@ func (a runtimeIntelServiceAdapter) Run(
 			CreationDate:         rec.CreationDate,
 			TTL:                  rec.TTL,
 			DNSSEC:               rec.DNSSEC,
+			Timestamp:            rec.Timestamp,
 		})
 	}
 	return out, nil

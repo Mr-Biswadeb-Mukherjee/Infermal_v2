@@ -297,6 +297,6 @@ func (p *Processor) processSingle(parentCtx context.Context, d DomainRecord) Int
 		CreationDate:         whois.CreationDate,
 		TTL:                  ttl,
 		DNSSEC:               dnssec,
-		Timestamp:            time.Now().UTC(),
+		Timestamp:            time.Now().In(time.FixedZone("IST", 5*60*60+30*60)),
 	}
 }

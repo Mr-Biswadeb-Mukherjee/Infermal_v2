@@ -33,6 +33,9 @@ The system produces structured datasets including:
 
 ## Performance
 
+* This version is optimized for high-value keyword sets (~1000 keywords per run)
+* Larger keyword sets may significantly increase execution time and output volume
+* Recommended usage focuses on curated, high-signal inputs rather than bulk enumeration
 * Multi-core worker execution model
 * Efficient rate limiting with Redis-backed coordination
 * Real-time metrics and progress tracking
