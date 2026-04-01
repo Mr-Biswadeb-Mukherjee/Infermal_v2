@@ -7,6 +7,8 @@
 
 *A DNS Intelligence & Infrastructure Behavioral Analysis Framework*
 
+[![Version](https://img.shields.io/badge/Version-v1.0.0-informational?style=flat-square)](./VERSION.md)
+
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat-square\&logo=go\&logoColor=white)](https://golang.org/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-2ea44f?style=flat-square\&logo=github-actions\&logoColor=white)](https://github.com/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
@@ -18,8 +20,8 @@
 
 ---
 
-[Overview](#overview) · [Architecture](#architecture) · [Features](#-features) · [Getting Started](#-getting-started) · [API](#api-control-plane) · [Use Cases](#-use-cases)
-
+[Overview](#overview) · [Version](#version)
+· [Architecture](#architecture) · [Features](#-features) · [Getting Started](#-getting-started) · [API](#api-control-plane) · [Use Cases](#-use-cases) · [Citation](#citation)
 </div>
 
 ---
@@ -39,6 +41,16 @@ Domain Generation → DNS Resolution → Intelligence Extraction → Correlation
 Outputs are emitted as structured NDJSON, enabling integration with SIEM platforms and downstream processing systems.
 
 This work is part of ongoing offensive security research conducted by `Biswadeb Mukherjee and his research lab`.
+
+---
+
+## Version
+
+* Public Release Notes: [VERSION.md](./VERSION.md)
+* Internal Contract (Engineering): [CONTRACT.md](./CONTRACT.md)
+
+This release defines the system’s supported capabilities, operational guarantees, and known limitations.
+Operators are encouraged to review the version contract before running large-scale workloads.
 
 ---
 
