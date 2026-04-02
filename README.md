@@ -16,12 +16,14 @@
 [![Redis](https://img.shields.io/badge/Redis-Required-DC382D?style=flat-square\&logo=redis\&logoColor=white)](https://redis.io/)
 [![Platform](https://img.shields.io/badge/Platform-Linux-FCC624?style=flat-square\&logo=linux\&logoColor=black)](https://www.kernel.org/)
 
+[![Reproducible Snapshot](https://img.shields.io/badge/Reproducible-Snapshot-blueviolet?style=flat-square)](#-reproducible-execution-snapshot)
+
 *High-throughput domain intelligence, DNS resolution, and behavioral analysis at scale.*
 
 ---
 
 [Overview](#overview) · [Version](#version)
-· [Architecture](#architecture) · [Features](#-features) · [Getting Started](#-getting-started) · [API](#api-control-plane) · [Use Cases](#-use-cases) · [Citation](#citation)
+· [Architecture](#architecture) · [Features](#features) · [Getting Started](#getting-started) · [API](#api-control-plane) · [Use Cases](#-use-cases) · [Citation](#citation)
 </div>
 
 ---
@@ -47,7 +49,6 @@ This work is part of ongoing offensive security research conducted by `Biswadeb 
 ## Version
 
 * Public Release Notes: [VERSION.md](./VERSION.md)
-* Internal Contract (Engineering): [CONTRACT.md](./CONTRACT.md)
 
 This release defines the system’s supported capabilities, operational guarantees, and known limitations.
 Operators are encouraged to review the version contract before running large-scale workloads.
@@ -64,65 +65,51 @@ DIBs follows a unidirectional processing pipeline with controlled execution stag
 
 ---
 
-## 🚀 Features
+## Features
 
-### Domain Mutation Engine
+- Domain Mutation Engine
+  - Bitsquatting  
+  - Typosquatting  
+  - Combosquatting  
+  - Homograph generation  
+  - Phonetic mutations  
+  - Similarity scoring (Jaro–Winkler)  
+  - Subdomain permutations  
 
-* Bitsquatting  
-* Typosquatting  
-* Combosquatting  
-* Homograph generation  
-* Phonetic mutations  
-* Similarity scoring (Jaro–Winkler)  
-* Subdomain permutations  
+Note: All generated domains are validated, deduplicated, and scored before processing.
 
-All generated domains are validated, deduplicated, and scored before processing.
+- High-Speed DNS Engine
+  - Recursive and stub resolution modes  
+  - Multi-record support (A, AAAA, CNAME, MX, TXT, SOA)  
+  - Adaptive timeout and retry logic  
+  - High-concurrency worker execution  
 
----
+- Intelligence Extraction
+  - A / AAAA enumeration  
+  - CNAME chain resolution  
+  - Nameserver profiling  
+  - MX and TXT record extraction  
+  - Provider attribution  
+  - TTL anomaly detection  
+  - Fast-flux detection  
+  - DNSSEC validation  
 
-### High-Speed DNS Engine
+- Correlation Engine
+  - Infrastructure clustering (IP / ASN)  
+  - Domain relationship mapping  
+  - Shared infrastructure detection  
+- Output System
+  - Generated domains  
+  - Resolved domains  
+  - DNS intelligence records  
+  - Infrastructure clusters  
+  - Runtime metrics  
 
-* Recursive and stub resolution modes  
-* Multi-record support (A, AAAA, CNAME, MX, TXT, SOA)  
-* Adaptive timeout and retry logic  
-* High-concurrency worker execution  
-
----
-
-### Intelligence Extraction
-
-* A / AAAA enumeration  
-* CNAME chain resolution  
-* Nameserver profiling  
-* MX and TXT record extraction  
-* Provider attribution  
-* TTL anomaly detection  
-* Fast-flux detection  
-* DNSSEC validation  
-
----
-
-### Correlation Engine
-
-* Infrastructure clustering (IP / ASN)  
-* Domain relationship mapping  
-* Shared infrastructure detection  
+Note: All outputs are NDJSON-based
 
 ---
 
-### Output System
-
-All outputs are NDJSON-based:
-
-* Generated domains  
-* Resolved domains  
-* DNS intelligence records  
-* Infrastructure clusters  
-* Runtime metrics  
-
----
-
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -165,6 +152,42 @@ DIBs exposes an API for managing scan lifecycle and runtime control.
 | /api/v3/metrics | GET    |
 
 Authentication uses **ed25519 public key validation** via the `X-API-Key` header.
+
+---
+
+
+## 📦 Reproducible Execution Snapshot
+
+A complete execution snapshot of DIBs is provided for research, validation, and reproducibility in the directory `release`
+
+This snapshot includes:
+
+* Full runtime outputs (`.ndjson`)
+* Execution logs
+* Input datasets
+* Configuration files
+* Generated result artifacts
+* Compiled binary used during execution
+
+### 🔽 Extract the Snapshot
+
+```bash
+tar --zstd -xvf DIBs_v1.tar.zst
+```
+### ▶️ Reproduce the Execution
+
+Follow the detailed execution steps in:
+
+```bash
+RUN.md
+```
+
+### ⚠️ Notes
+
+* DNS and infrastructure data are time-dependent; results may vary on re-execution
+* For exact analysis, use the provided snapshot outputs
+* Ensure Redis is properly configured before running the system
+
 
 ---
 

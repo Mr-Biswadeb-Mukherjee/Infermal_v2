@@ -3,10 +3,18 @@
   "required_status_checks": {
     "strict": true,
     "contexts": [
-      "Go Security Checks",
-      "CodeQL Analysis",
-      "Semgrep Security Scan",
-      "Trivy Dependency + Secret Scan"
+      "DIBs v2 CI / quality",
+      "DIBs v2 CI / test",
+      "DIBs v2 CI / build (linux, amd64, )",
+      "DIBs v2 CI / build (linux, arm64, )",
+      "DIBs v2 CI / build (windows, amd64, .exe)",
+      "DIBs v2 CI / build (darwin, amd64, )",
+      "DIBs v2 CI / build (darwin, arm64, )",
+      "Security Pipeline / Go Security Checks",
+      "Security Pipeline / CodeQL Analysis (actions)",
+      "Security Pipeline / CodeQL Analysis (go)",
+      "Security Pipeline / Semgrep Security Scan",
+      "Security Pipeline / Trivy Dependency + Secret Scan"
     ]
   },
   "enforce_admins": true,
