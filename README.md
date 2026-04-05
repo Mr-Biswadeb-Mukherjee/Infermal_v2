@@ -233,9 +233,9 @@ If you use this work, please cite:
 
 ## License
 
-The source code is licensed under the Apache License 2.0.
+The DIBs source code is released under the Apache License, Version 2.0, providing permissive usage rights along with explicit patent protection.
 
-The whitepaper and documentation are licensed under CC BY 4.0.
+The accompanying whitepaper and related documentation are distributed under the Creative Commons Attribution 4.0 International License (CC BY 4.0), which permits unrestricted use, distribution, and reproduction in any medium, provided appropriate credit is given to the original author.
 
 ---
 
