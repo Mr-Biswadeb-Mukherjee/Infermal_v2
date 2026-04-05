@@ -254,5 +254,5 @@ ORCID: https://orcid.org/0009-0005-4610-4010
 </div>
 
 <div align="center">
-<sub>Copyright 2026 Biswadeb Mukherjee</sub>
+<sub>Copyright 2026 © Biswadeb Mukherjee</sub>
 </div>
