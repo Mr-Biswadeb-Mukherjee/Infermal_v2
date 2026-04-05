@@ -225,6 +225,7 @@ jobs:
             coverage_gate.txt
 
   build:
+    name: build (${{ matrix.goos }}, ${{ matrix.goarch }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [quality, test]
