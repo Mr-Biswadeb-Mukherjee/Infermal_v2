@@ -88,7 +88,7 @@ jobs:
           go run scripts/arch_check.go | tee arch_report.txt
           echo "Arch penalty: $(cat arch_score.txt 2>/dev/null || echo 0)%"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: arch-report
           path: arch_report.txt
@@ -215,7 +215,7 @@ jobs:
           [ "$gate" != "BLOCKED" ]
 
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: |
@@ -261,7 +261,7 @@ jobs:
           output="${{ env.BINARY_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
           go build -trimpath -ldflags="-s -w" -o "dist/${output}" ./main.go
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: DIBs-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/
